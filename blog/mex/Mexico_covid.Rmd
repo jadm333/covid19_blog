@@ -1,0 +1,292 @@
+---
+title: "Ociosidad en tiempos de COVID-19 (2019-nCoV)"
+author:
+- affiliation: UHN, Toronto, ON, Canada
+  affiliation_url: https://thebru.ca/Juan_Pablo_Diaz_Martinez
+  name: Juan Pablo Díaz Martínez
+date: "Mar 28, 2020"
+description: Algunos comentarios de lo que pasa en México con respecto a esta enfermedad
+creative_commons: CC BY-SA
+output:
+  distill::distill_article:
+    self_contained: no
+    toc: yes
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE,
+                      tidy.opts=list(width.cutoff=60),
+                      tidy=TRUE)
+library(tidyverse)
+library(lubridate)
+library(countrycode)
+library(ggrepel)
+library(prismatic)
+library(ggsci)
+library(paletteer)
+library(incidence)
+library(EpiEstim)
+library(projections)
+library(epitrix)
+library(distcrete)
+library(magrittr)
+
+setwd("C:/Users/juand/OneDrive/Documents/Covid Mexico")
+
+countries<-c("ITA","ESP","USA","MEX")
+
+confirmed_raw <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", col_types = cols())
+deaths_raw <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv", col_types = cols())
+
+confirmed_data<-confirmed_raw %>%
+  select(-Lat, -Long) %>%
+  rename(country = `Country/Region`,Province_Re=`Province/State`) %>%
+  mutate(iso3c = countrycode(country,
+                             origin = "country.name",
+                             destination = "iso3c")) %>%
+  select(-country) %>%
+  filter(iso3c %in% countries) %>% 
+  pivot_longer(
+    c(-Province_Re,-iso3c), 
+    names_to = "date_str", 
+    values_to = "confirmed"
+  ) %>%
+  mutate(date = mdy(date_str)) %>%
+  group_by(Province_Re)  %>% 
+  mutate(new_confirmed=c(0,diff(confirmed)))  %>% ungroup() %>%
+  select(iso3c,Province_Re, date,confirmed,new_confirmed) 
+
+deaths_data<-deaths_raw %>%
+  select(-Lat, -Long) %>%
+  rename(country = `Country/Region`,Province_Re=`Province/State`) %>%
+  mutate(iso3c = countrycode(country,
+                             origin = "country.name",
+                             destination = "iso3c")) %>%
+  select(-country) %>%
+  filter(iso3c %in% countries) %>% 
+  pivot_longer(
+    c(-Province_Re,-iso3c), 
+    names_to = "date_str", 
+    values_to = "deaths"
+  ) %>%
+  mutate(date = mdy(date_str)) %>%
+  group_by(Province_Re)  %>% 
+  mutate(new_deaths=c(0,diff(deaths)))  %>% ungroup() %>%
+  select(iso3c,Province_Re, date,deaths,new_deaths) 
+
+
+data_covid <- confirmed_data %>%
+  full_join(deaths_data, by = c("iso3c","Province_Re", "date"))
+
+ontario<-data_covid %>% filter(Province_Re=="Ontario") %>%
+  mutate(iso3c="Ontario")
+```
+
+# Introducción
+
+Este post nace despúes de 2 semanas de distanciamento social en Toronto, Canadá. Para los que no me conocen, actualmente soy doctorante en la Universidad de Toronto donde mi línea de investigación es el aprendizaje estadístico como herramienta de predicción en enfermedades que tienden a progresar a a través del tiempo (e.g. cáncer). Cuento con una posición de "Bioestadístico" en [University Health Network](https://www.uhn.ca/corporate/AboutUHN) el cual aglomera diferentes hospitales para una mejor colabaración en diferentes temas de investigación.
+
+Es importante notar que este post no ha sido revisado por pares y que mi linea de investigación no es el modelaje de epidemias como la que vivimos ahorita. Este post tiene como objetivo discutir algunos aspectos importantes de la epidemia en nuestro país y hacer unas predicciones sencillas de lo que está por venir. Es importante notar que este análisis usa datos que se han capturado hasta Marzo 28. El link para el código de este post se encuentre en un repositorio de Github el cuál podrán encontrar al final de este post; las gráficas y el análisis fueron hechos en `R`, utilizando en su mayoría librerías como `dplyr`, `ggplot2` y una serie de librerías que están aglomeradas en [**R** **E**pidemics **Con**sortium (**RECON**) suite](https://www.repidemicsconsortium.org).
+
+# Epidemia en México
+
+Mucho se ha hablado en las conferencias vespertinas relacionadas a COVID-19 acerca del número de casos nuevos desde que la epidemia llegó a nuestro país y si el gobierno ha hecho pruebas suficientes. Antes de describir de cualquier análisis es importante describir dos aspectos importrantes respecto a las características epidemiológicas en nuestro país:
+1. Cómo funciona el sistema epidemiológico
+2. Como se alimenta diariamente el número de casos confirmados 
+
+## Sistema epidemiológico en México
+
+El Dr. Hugo López Gatell ha mencionada en muchísimas ocasiones como funciona el sistema centinela en nuestro país (la siguiente [entrevista](https://elpais.com/sociedad/2020-03-26/lopez-gatell-en-mexico-queremos-un-balance-entre-proteger-la-salud-y-a-las-economias-mas-debilitadas.html) es muestra de lo anterior). A manera de resumen, la idea del programa es que “en vez de recopilar grandes cantidades de datos de calidad deficiente, hay que concentrarse en recopilar datos de buena calidad de un número reducido de centros centinela seleccionados cuidadosamente”, de acuerdo al documento de la [OMS](https://www.paho.org/revelac-i/wp-content/uploads/2015/10/2015-cha-guia-operativa-vigilancia-centinela-irag.pdf) actualizado en 2014. El proceso es buscar COVID-19 en pacientes negativos a la prueba de influenza para ver si hay transmisión comunitaria; Alberto Díaz Cayeros hace una descripción de éste y discute posibles fallas que pueden ocurrir en este [sistema](https://medium.com/@adiazcayeros/the-balancing-act-in-mexicos-covid-19-response-a6955ec629fc).
+
+Este sistema funcionó para H1N1 en el 2009 y todos esperamos que funcione para COVID-19. ¿Por qué utilizar este sistema y no pruebas masivas como lo hizo Corea del Sur? Creo que es por dos razones: el sistema ha funcionado y es eficiente debido las limitaciones de recursos en Salud en nuestro país. Es importante aclarar que estas limitaciones no son nuevas y es producto de un porcentaje muy bajo del gasto en el sector salud como porcentaje del PIB durante varios años de acuerdo a la [OCDE](https://stats.oecd.org/).
+
+## Casos confirmados
+
+El 28 de febrero fue confirmado el primer paciente con COVID-19 en nuestro país. Desde el 23 de marzo se han [modificado](https://lopezdoriga.com/nacional/modifica-salud-criterios-para-identificacion-de-casos-sospechosos-por-covid-19/) los criterios operacionales para la vigilancia epidemiológica de COVID-19. Como se ha mencionado en diferentes medio de comunicación (nota [aquí](https://www.elfinanciero.com.mx/nacional/al-10-de-los-casos-sospechosos-de-covid-19-con-sintomas-leves-se-les-aplica-prueba-imss)) la definición es la siguiente:
+
+* Caso sospechoso - Persona de cualquier edad que en los últimos siete días haya presentado al menos dos síntomas de tos, fiebre o cefalea, es decir, dolor de cabeza intenso y persistente y que esté acompañado de los siguientes signos: dificultad para respirar, hinchazón en articulaciones con dificultad de movimiento, dolor muscular, ardor de garganta, rinorrea, conjuntivitis y dolor de tórax.
+
+* Caso confirmado - Persona que cumpla lo anterior y que cuente con confirmación del InDRE.
+
+Asimismo, se modificó el porcentaje de muestreo para vigilar los casos de COVID-19. Solo se realizará la prueba al 10% de los casos sospechosos sin síntomas o síntomas leves. A su vez, se realizará la prueba al 100% de los casos sospechosos con sintomología grave o que cumplan con la definición infección respiratoria aguda grave (IRAG). Es importante recalcar que el gobierno ha recalcado que **todos los casos sospechosos sin importar si se les realizó la prueba deberán de permanecer en aislamiento **.
+
+# Análisis de la epidemia en México
+
+Antes de presentar datos y gráficas me gustaría enfatizar en **2 aspectos importantes al considerar la presentación y análisis de datos de casos confirmados con COVID-19**:
+
+1. La comparación entre países (e.g. incidencia acumulada) debe de realizarse con mucho cuidado. Esto debido a lo expuesto en la sección anterior; los países tienen distintos sistemas epidemiológicos y diferentes recursos, por lo tanto la cantidad de casos confirmados está en función de la cantidad de pruebas que puedan realizar. Es muy importante recalcar esto ya que esta comparación es la que más noticias engañosas y falsas que al menos yo he encontrado en redes sociales (ver [aquí](https://twitter.com/samuel_garcias/status/1243696094682456068)).
+2. La comparación entre países debe de realizarze desde un punto en común en el tiempo ya que la epidemia entra a cada país en momentos distintos. Esto tiene mucha importancia sobre todo al presentar gráficas e ilustraciones ya sea para mostrar la incidencia (casos nuevos) o incidencia acumulada.
+
+¿Qué sí podemos rescatar cuando comparamos casos confirmados entre diferentes países?. La siguiente gráfica muestra el número de casos confirmados acumulados con COVID-19 desde que se comfirmó el paciente número 100. Decidí transformar el eje de las $y$ al aplicarle el logaritmo base 2; esta transformación ayuda a una mejor interpretación de los datos ya que es más fácil para el lector ver cuanto tiempo se tarda un país en tener el doble de casos confirmados en un periodo determinado de tiempo. Asimismo al transformar los datos la serie de tiempo presenta un comportamiento más lneal.
+
+```{r acum_casos, message=FALSE, warning=FALSE, tidy=TRUE,fig.width=10, fig.height=8}
+ data_covid  %>% 
+   group_by(iso3c,date) %>%
+   summarise_at(vars(-Province_Re),funs(sum)) %>% filter(confirmed > 99) %>%
+   mutate(days_elapsed = date - min(date),
+          end_label = ifelse(date == max(date),iso3c, NA)) %>%
+   ggplot(mapping = aes(x = days_elapsed, y = confirmed,label=end_label,
+                        color = iso3c, alpha=iso3c,
+                        group = iso3c)) + 
+   geom_line(size = 0.8) +scale_alpha_manual(values=c(1,1,1,1,1,1,1,0.3,1))+
+   geom_text_repel(nudge_x = 1.1,
+                   nudge_y = 0.1, 
+                   segment.color = NA) + 
+   guides(color = FALSE,alpha=F) + 
+   scale_color_manual(values = prismatic::clr_darken(paletteer_d("ggsci::category20_d3"), 0.2)) +
+   scale_y_continuous(labels = scales::comma_format(accuracy = 1),
+                      trans = "log2",n.breaks = 10) +  
+   scale_x_continuous(n.breaks = 10) +
+   labs(x = "Días desde el caso número 100", 
+        y = "Número acumulado de casos confirmados (escala log2)", 
+        title = "Número acumulado de casos confirmados por COVID-19", 
+        caption = "Juan Pablo Díaz @juandiazmart / Data: Repo John H.",
+        subtitle = paste("Datos hasta", format(max(data_covid$date), "%b %e, %Y"))) + 
+   theme(plot.title = element_text(size = rel(2), face = "bold"),
+         plot.subtitle = element_text(size = rel(1.5)),
+         axis.text.y = element_text(size = rel(2)),
+         axis.title.x = element_text(size = rel(1.5)),
+         axis.title.y = element_text(size = rel(1.5)),
+         axis.text.x = element_text(size = rel(2)),
+         legend.text = element_text(size = rel(2)),
+         panel.grid.major = element_line(colour = "grey90", size = .1),
+         panel.background = element_blank(),
+         axis.line = element_line(colour = "grey50", size = .9)) + 
+   geom_abline(intercept =log2(118), slope = 1/7,linetype = "dashed")+
+   annotate("text", label = "Casos incrementan \n al doble cada 7 días", x = 23, y = 1700,size=3)+
+   geom_abline(intercept =log2(118), slope = 1/3,linetype = "dashed")+
+   annotate("text", label = "Casos incrementan \n al doble cada 3 días", x = 21, y = 32000,size=3)
+```
+
+México desde que llegó el caso número 100 ha tenido un incremento al doble de casos confirmados cada 3 días, con una ligera pendiente menor después de 5 días desde que llegó a su caso 100. Al final es esta pendiente la que queremos que se haga 0, es decir, aplastarla para que la curva de casos acumulados se "aplane". Si queremos comparar países no nos fijemos en el número de casos acumulados. Fijémonos mejor en sus pendientes y como éstas cambian a través del tiempo. Si los procedimientos epidemiológicos descritos anterormente no cambian, la pendiente de México podría incrementar si por ejemplo aumentan considerablemente los casos graves.
+
+Dado que es difícil comparar casos confirmados por todo lo explicado en párrafos previos, pienso que es más fácil comparar el número de muertes^[Recordemos que a todos los graves sí se les realiza la prueba]. La siguiente gráfica nos ayuda a entender el comportamiento de número de muertes acumuladas en nuestro país desde que se presentó la quinta muerta.
+
+```{r acum_muerte, message=FALSE, warning=FALSE, tidy=TRUE,fig.width=10, fig.height=8}
+ data_covid  %>% 
+   group_by(iso3c,date) %>%
+   summarise_at(vars(-Province_Re),funs(sum)) %>% filter(deaths > 4) %>%
+   mutate(days_elapsed = date - min(date),
+          end_label = ifelse(date == max(date),iso3c, NA)) %>%
+   ggplot(mapping = aes(x = days_elapsed, y = deaths,label=end_label,
+                        color = iso3c, alpha=iso3c,
+                        group = iso3c)) + 
+   geom_line(size = 0.8) +scale_alpha_manual(values=c(1,1,1,1,1,1,1,0.3,1))+
+   geom_text_repel(nudge_x = 1.1,
+                   nudge_y = 0.1, 
+                   segment.color = NA) + 
+   guides(color = FALSE,alpha=F) + 
+   scale_color_manual(values = prismatic::clr_darken(paletteer_d("ggsci::category20_d3"), 0.2)) +
+   scale_y_continuous(labels = scales::comma_format(accuracy = 1),
+                      trans = "log2",n.breaks = 10) +  
+   scale_x_continuous(n.breaks = 10) +
+   labs(x = "Días desde el quinto deceso", 
+        y = "Número acumulado de muertes (escala log2)", 
+        title = "Número acumulado de muertes por COVID-19", 
+        caption = "Juan Pablo Díaz @juandiazmart / Data: Repo John H.",
+        subtitle = paste("Datos hasta", format(max(data_covid$date), "%b %e, %Y"))) + 
+   theme(plot.title = element_text(size = rel(2), face = "bold"),
+         plot.subtitle = element_text(size = rel(1.5)),
+         axis.text.y = element_text(size = rel(2)),
+         axis.title.x = element_text(size = rel(1.5)),
+         axis.title.y = element_text(size = rel(1.5)),
+         axis.text.x = element_text(size = rel(2)),
+         legend.text = element_text(size = rel(2)),
+         panel.grid.major = element_line(colour = "grey90", size = .1),
+         panel.background = element_blank(),
+         axis.line = element_line(colour = "grey50", size = .9)) + 
+   geom_abline(intercept =log2(5), slope = 1/2,linetype = "dashed")+
+   annotate("text", label = "Muertes incrementan \n al doble cada 2 días", x = 13, y = 1024,size=3)+
+   geom_abline(intercept =log2(5), slope = 1/3,linetype = "dashed")+
+   annotate("text", label = "Muertes incrementan \n al doble cada 3 días", x = 15, y = 64,size=3)
+```
+
+Estos datos son los que personalmente me preocupan ya que México podría llegar a 4,000 muertos aproximadamente 20 días después del quinto deceso si las muertes incremental al doble cada 2 días (mismo caso que España). Volvemos al punto central que discutí en los datos de casos confirmados, **lo importante es ver cuánto cambia la pendiente a través del tiempo**. Hay que tener en cuenta que muchas de las muertes no serán diagnosticadas como muertes por COVID-19 (eso pasa en México y en otros países), por eso mientras el aumento sea constante no habría de preocuparse por esta sub-estimación.
+
+
+# Proyecciones de los casos confirmados.
+
+Para poder tomar decisiones es importante tener una idea de como se comportará la epidemia en el futuro. Tenemos una idea de otros países ya que la epidemia entró tarde en nuestro país. Con diferentes herramientas cuantitativas  también podemos predecir el futuro con los datos que tenemos hasta el 29 de marzo 
+
+Here we'll examine the use of the [`projections` package](https://www.repidemicsconsortium.org/projections/), which is also part of the **RECON** suite. From its manual page:
+
+> `projections` uses data on daily incidence, the _serial interval_ (time between onsets of infectors and infectees) and the reproduction number to simulate plausible epidemic trajectories and project future incidence. It relies on a branching process where daily incidence follows a Poisson process determined by a daily infectiousness, computed as:
+$$\lambda_t = \sum_{s=1}^{t-1} y_s w(t-s)$$
+
+> where $w()$ is the probability mass function (PMF) of the serial interval, and $y_s$ is the incidence at time $s$.
+We can just re-use the `incidence()` object for the Hubei incidence data which we created above for the purposes of fitting log-linear models to the epidemic trajectories. We'll also use the discrete _serial interval_ distribution we created, and the median _reproduction number_ we calculated above for the growth and decay phases of the outbreak in Hubei province, in order to test the projection of those phases of the epidemic in Hubei forwards. We'll base these projections on only the first parts of the growth and decay phases, so that we can then compare the resulting projections against the observed incidence data for the balance of thoe phases. If the projections match that observed reality reasonably well, we can then have some confidence in any forward projections into the future which we make. Such projections are obviously valuable for planning purposes -- for example, during the decay phase of an epidemic, projections of the decay can be used to inform how long public health interventions such as transport lock-downs and mandatory social isolation may have to be kept in place. 
+
+First we'll project the Hubei province incidence data for the first part of the growth phase of the epidemic. Recall that we found the peak of the epidemic (daily incidence) curve for Hubei to have occured on `r format(hubei_incidence_peak, "%d %B %Y")`. Thus, we'll base our projection on the Hubei incidence data up to 14 days before that peak, and compare with the observed data. Click on the `Code` button to see the details.
+
+```{r test_projection_Hubei_growth, echo=TRUE, tidy=TRUE, message=FALSE, warning=FALSE}
+set.seed(1)
+pred_fwd_days <- 10
+date_range <- 1:(which(get_dates(hubei_incidence_object) == hubei_incidence_peak) - pred_fwd_days)
+test_pred_growth <- project(hubei_incidence_object[date_range],
+                            R = median(growth_R0),
+                            si = w,
+                            n_days = pred_fwd_days, n_sim = 1000)
+# convert the test_pred_growth matrix to a data frame and get the median 
+# incidence for all the simulations for each date
+test_pred_growth_median_counts <- test_pred_growth %>% 
+  as.data.frame() %>%
+  pivot_longer(-dates, 
+               names_to="simulation", 
+               values_to="incidence") %>%
+  group_by(dates) %>%
+  summarise(incident_cases=as.integer(median(incidence))) %>%
+  mutate(data_type = "projection")
+test_pred_growth_median_counts %>%
+  bind_rows(tibble(dates=get_dates(hubei_incidence_object),
+                   incident_cases=get_counts(hubei_incidence_object),
+                   data_type="observed")) %>%
+  ggplot(aes(x=dates, y=incident_cases, colour=data_type)) +
+    geom_point() +
+    geom_line() +
+    labs(x="", y="Daily incident confirmed cases",
+         title="Observed versus growth-phase projection of incident cases\nin Hubei province",
+         subtitle=paste("(projection based on observed case counts up to", 
+                        format(hubei_incidence_peak - days(pred_fwd_days), "%d %B %Y"),
+                        ")")) +
+         theme(legend.position="top", legend.title = element_blank())
+```
+
+OK, that's impressive! The projection, based only on observed data up to `r format(hubei_incidence_peak - days(pred_fwd_days), "%d %B %Y")`, is in remarkably close agreement with the observed data. Let's do the same for the decay phase, this time holding out 5 days of the observed decay from our prediction.
+
+```{r test_projection_Hubei_decay, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
+set.seed(1)
+pred_fwd_days <- 0 # 5
+date_range <- which(get_dates(hubei_incidence_object) == hubei_incidence_peak):(length(get_dates(hubei_incidence_object)) - pred_fwd_days)
+date_range <- which(get_dates(hubei_incidence_object) == hubei_incidence_peak):(length(get_dates(hubei_incidence_object)) - pred_fwd_days)
+test_pred_decay <- project(hubei_incidence_object[date_range],
+                            R = median(decay_R0),
+                            si = w,
+                            n_days = 60, n_sim = 1000)
+# convert the test_pred_decay matrix to a data frame and get the median 
+# incidence for all the simulations for each date
+test_pred_decay_median_counts <- test_pred_decay %>% 
+  as.data.frame() %>%
+  pivot_longer(-dates, 
+               names_to="simulation", 
+               values_to="incidence") %>%
+  group_by(dates) %>%
+  summarise(incident_cases=as.integer(median(incidence))) %>%
+  mutate(data_type = "projection")
+test_pred_decay_median_counts %>%
+  bind_rows(tibble(dates=get_dates(hubei_incidence_object),
+                   incident_cases=get_counts(hubei_incidence_object),
+                   data_type="observed")) %>%
+  ggplot(aes(x=dates, y=incident_cases, colour=data_type)) +
+    geom_point() +
+    geom_line() +
+    labs(x="", y="Daily incident confirmed cases",
+         title="Observed versus decay-phase projection of incident cases\nin Hubei province",
+         subtitle=paste("(projection based on observed case counts in decay phase up to", 
+          format(get_dates(hubei_incidence_object)[(length(get_dates(hubei_incidence_object)) - pred_fwd_days)], "%d %B %Y"),
+          ")")) +
+     theme(legend.position="top", legend.title = element_blank())
+```
+
+Based on that projection, it will take until the beginning of April for the outbreak in Hubei to be extinguished. But perhaps that is too conservative a prediction? We'll re-visit these predictions in a later post, in the light of further incidence data.
