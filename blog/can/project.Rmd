@@ -111,12 +111,9 @@ plot_project<-function(country="Ontario",conf=20,method=c("Estimate_R","Simulate
   if (method == "Estimate_R") {
     re_est<- estimate_R(df, method = "uncertain_si", 
                         config = make_config(config_si))
-    # mean_R0<-tail(re_est$R$`Mean(R)`, n=1) 
-    # std_R0<-tail(re_est$R$`Std(R)`, n=1) 
-    # R <- rnorm(n_sim, mean_R0, std_R0)
-    R_sample <- sample_posterior_R(re_est, n = 1000)
+    R_sample <- sample_posterior_R(re_est, n = 1000,window = 1:nrow(re_est$R))
     pred_growth_var <- project(incidence_object[date_range],
-                               R = R_sample,R_fix_within = T,
+                               R = R_sample,R_fix_within = F,
                                si = w,
                                n_days = pred_days, n_sim = 1000)
   }
