@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1"/>
+  <meta name="generator" content="distill" />
+
+  <style type="text/css">
+  /* Hide doc at startup (prevent jankiness while JS renders/transforms) */
+  body {
+    visibility: hidden;
+  }
+  </style>
+
+ <!--radix_placeholder_import_source-->
+ <!--/radix_placeholder_import_source-->
+
+  <!--radix_placeholder_meta_tags-->
+  <title>Projections of daily incidence based on past incidence for COVID-19 </title>
+  
+  <meta property="description" itemprop="description" content="A simple but powerful tool for projecting new cases"/>
+  
+  <link rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/"/>
+  
+  <!--  https://schema.org/Article -->
+  <meta property="article:published" itemprop="datePublished" content="2020-03-30"/>
+  <meta property="article:created" itemprop="dateCreated" content="2020-03-30"/>
+  <meta name="article:author" content="Juan Pablo Díaz Martínez"/>
+  
+  <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
+  <meta property="og:title" content="Projections of daily incidence based on past incidence for COVID-19 "/>
+  <meta property="og:type" content="article"/>
+  <meta property="og:description" content="A simple but powerful tool for projecting new cases"/>
+  <meta property="og:locale" content="en_US"/>
+  
+  <!--  https://dev.twitter.com/cards/types/summary -->
+  <meta property="twitter:card" content="summary"/>
+  <meta property="twitter:title" content="Projections of daily incidence based on past incidence for COVID-19 "/>
+  <meta property="twitter:description" content="A simple but powerful tool for projecting new cases"/>
+  
+  <!--/radix_placeholder_meta_tags-->
+  <!--radix_placeholder_rmarkdown_metadata-->
+  
+  <script type="text/json" id="radix-rmarkdown-metadata">
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","creative_commons","output"]}},"value":[{"type":"character","attributes":{},"value":["Projections of daily incidence based on past incidence for COVID-19 "]},{"type":"character","attributes":{},"value":["A simple but powerful tool for projecting new cases"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["affiliation","affiliation_url","name"]}},"value":[{"type":"character","attributes":{},"value":["UHN, Toronto, ON, Canada"]},{"type":"character","attributes":{},"value":["https://thebru.ca/Juan_Pablo_Diaz_Martinez"]},{"type":"character","attributes":{},"value":["Juan Pablo Díaz Martínez"]}]}]},{"type":"character","attributes":{},"value":["Mar 30, 2020"]},{"type":"character","attributes":{},"value":["CC BY-SA"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained","toc","toc_depth"]}},"value":[{"type":"logical","attributes":{},"value":[false]},{"type":"logical","attributes":{},"value":[true]},{"type":"integer","attributes":{},"value":[2]}]}]}]}
+  </script>
+  <!--/radix_placeholder_rmarkdown_metadata-->
+  
+  <script type="text/json" id="radix-resource-manifest">
+  {"type":"character","attributes":{},"value":["algo.png","project_files/bowser-1.9.3/bowser.min.js","project_files/distill-2.2.21/template.v2.js","project_files/figure-html5/Cori_uncertain_si_model-1.png","project_files/figure-html5/Cori_uncertain_si_model_fit_hubei-1.png","project_files/figure-html5/projections-1.png","project_files/jquery-1.11.3/jquery.min.js","project_files/webcomponents-2.0.0/webcomponents.js"]}
+  </script>
+  <!--radix_placeholder_navigation_in_header-->
+  <!--/radix_placeholder_navigation_in_header-->
+  <!--radix_placeholder_distill-->
+  
+  <style type="text/css">
+  
+  body {
+    background-color: white;
+  }
+  
+  .pandoc-table {
+    width: 100%;
+  }
+  
+  .pandoc-table>caption {
+    margin-bottom: 10px;
+  }
+  
+  .pandoc-table th:not([align]) {
+    text-align: left;
+  }
+  
+  .pagedtable-footer {
+    font-size: 15px;
+  }
+  
+  .html-widget {
+    margin-bottom: 2.0em;
+  }
+  
+  .l-screen-inset {
+    padding-right: 16px;
+  }
+  
+  .l-screen .caption {
+    margin-left: 10px;
+  }
+  
+  .shaded {
+    background: rgb(247, 247, 247);
+    padding-top: 20px;
+    padding-bottom: 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .shaded .html-widget {
+    margin-bottom: 0;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .shaded .shaded-content {
+    background: white;
+  }
+  
+  .text-output {
+    margin-top: 0;
+    line-height: 1.5em;
+  }
+  
+  .hidden {
+    display: none !important;
+  }
+  
+  d-article {
+    padding-bottom: 30px;
+  }
+  
+  d-appendix {
+    padding-top: 30px;
+  }
+  
+  d-article>p>img {
+    width: 100%;
+  }
+  
+  d-article iframe {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    margin-bottom: 2.0em;
+    width: 100%;
+  }
+  
+  figure img.external {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
+    padding: 18px;
+    box-sizing: border-box;
+  }
+  
+  /* CSS for table of contents */
+  
+  .d-toc {
+    color: rgba(0,0,0,0.8);
+    font-size: 0.8em;
+    line-height: 1em;
+  }
+  
+  .d-toc-header {
+    font-size: 0.6rem;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.5);
+    text-transform: uppercase;
+    margin-top: 0;
+    margin-bottom: 1.3em;
+  }
+  
+  .d-toc a {
+    border-bottom: none;
+  }
+  
+  .d-toc ul {
+    padding-left: 0;
+  }
+  
+  .d-toc li>ul {
+    padding-top: 0.8em;
+    padding-left: 16px;
+    margin-bottom: 0.6em;
+  }
+  
+  .d-toc ul,
+  .d-toc li {
+    list-style-type: none;
+  }
+  
+  .d-toc li {
+    margin-bottom: 0.9em;
+  }
+  
+  .d-toc-separator {
+    margin-top: 20px;
+    margin-bottom: 2em;
+  }
+  
+  .d-article-with-toc {
+    border-top: none;
+    padding-top: 0;
+  }
+  
+  
+  
+  /* Tweak code blocks (note that this CSS is repeated above in an injection
+     into the d-code shadow dom) */
+  
+  d-code {
+    overflow-x: auto !important;
+  }
+  
+  pre.d-code code.d-code {
+    padding-left: 10px;
+    font-size: 12px;
+    border-left: 2px solid rgba(0,0,0,0.1);
+  }
+  
+  pre.text-output {
+  
+    font-size: 12px;
+    color: black;
+    background: none;
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    text-align: left;
+    white-space: pre;
+    word-spacing: normal;
+    word-break: normal;
+    word-wrap: normal;
+    line-height: 1.5;
+  
+    -moz-tab-size: 4;
+    -o-tab-size: 4;
+    tab-size: 4;
+  
+    -webkit-hyphens: none;
+    -moz-hyphens: none;
+    -ms-hyphens: none;
+    hyphens: none;
+  }
+  
+  @media(min-width: 768px) {
+  
+  d-code {
+    overflow-x: visible !important;
+  }
+  
+  pre.d-code code.d-code  {
+      padding-left: 18px;
+      font-size: 14px;
+  }
+  pre.text-output {
+    font-size: 14px;
+  }
+  }
+  
+  /* Figure */
+  
+  .figure {
+    position: relative;
+    margin-bottom: 2.5em;
+    margin-top: 1.5em;
+  }
+  
+  .figure img {
+    width: 100%;
+  }
+  
+  .figure .caption {
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 12px;
+    line-height: 1.5em;
+  }
+  
+  .figure img.external {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
+    padding: 18px;
+    box-sizing: border-box;
+  }
+  
+  .figure .caption a {
+    color: rgba(0, 0, 0, 0.6);
+  }
+  
+  .figure .caption b,
+  .figure .caption strong, {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 1.0);
+  }
+  
+  
+  
+  /* Tweak 1000px media break to show more text */
+  
+  @media(min-width: 1000px) {
+    .base-grid,
+    distill-header,
+    d-title,
+    d-abstract,
+    d-article,
+    d-appendix,
+    distill-appendix,
+    d-byline,
+    d-footnote-list,
+    d-citation-list,
+    distill-footer {
+      grid-template-columns: [screen-start] 1fr [page-start kicker-start] 80px [middle-start] 50px [text-start kicker-end] 65px 65px 65px 65px 65px 65px 65px 65px [text-end gutter-start] 65px [middle-end] 65px [page-end gutter-end] 1fr [screen-end];
+      grid-column-gap: 16px;
+    }
+  
+    .grid {
+      grid-column-gap: 16px;
+    }
+  
+    d-article {
+      font-size: 1.06rem;
+      line-height: 1.7em;
+    }
+    figure .caption, .figure .caption, figure figcaption {
+      font-size: 13px;
+    }
+  }
+  
+  @media(min-width: 1180px) {
+    .base-grid,
+    distill-header,
+    d-title,
+    d-abstract,
+    d-article,
+    d-appendix,
+    distill-appendix,
+    d-byline,
+    d-footnote-list,
+    d-citation-list,
+    distill-footer {
+      grid-template-columns: [screen-start] 1fr [page-start kicker-start] 60px [middle-start] 60px [text-start kicker-end] 60px 60px 60px 60px 60px 60px 60px 60px [text-end gutter-start] 60px [middle-end] 60px [page-end gutter-end] 1fr [screen-end];
+      grid-column-gap: 32px;
+    }
+  
+    .grid {
+      grid-column-gap: 32px;
+    }
+  }
+  
+  
+  /* Get the citation styles for the appendix (not auto-injected on render since
+     we do our own rendering of the citation appendix) */
+  
+  d-appendix .citation-appendix,
+  .d-appendix .citation-appendix {
+    font-size: 11px;
+    line-height: 15px;
+    border-left: 1px solid rgba(0, 0, 0, 0.1);
+    padding-left: 18px;
+    border: 1px solid rgba(0,0,0,0.1);
+    background: rgba(0, 0, 0, 0.02);
+    padding: 10px 18px;
+    border-radius: 3px;
+    color: rgba(150, 150, 150, 1);
+    overflow: hidden;
+    margin-top: -12px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  
+  
+  /* Social footer */
+  
+  .social_footer {
+    margin-top: 30px;
+    margin-bottom: 0;
+    color: rgba(0,0,0,0.67);
+  }
+  
+  .disqus-comments {
+    margin-right: 30px;
+  }
+  
+  .disqus-comment-count {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+  }
+  
+  #disqus_thread {
+    margin-top: 30px;
+  }
+  
+  .article-sharing a {
+    border-bottom: none;
+    margin-right: 8px;
+  }
+  
+  .article-sharing a:hover {
+    border-bottom: none;
+  }
+  
+  .sidebar-section.subscribe {
+    font-size: 12px;
+    line-height: 1.6em;
+  }
+  
+  .subscribe p {
+    margin-bottom: 0.5em;
+  }
+  
+  
+  .article-footer .subscribe {
+    font-size: 15px;
+    margin-top: 45px;
+  }
+  
+  
+  /* Improve display for browsers without grid (IE/Edge <= 15) */
+  
+  .downlevel {
+    line-height: 1.6em;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+  }
+  
+  .downlevel .d-title {
+    padding-top: 6rem;
+    padding-bottom: 1.5rem;
+  }
+  
+  .downlevel .d-title h1 {
+    font-size: 50px;
+    font-weight: 700;
+    line-height: 1.1em;
+    margin: 0 0 0.5rem;
+  }
+  
+  .downlevel .d-title p {
+    font-weight: 300;
+    font-size: 1.2rem;
+    line-height: 1.55em;
+    margin-top: 0;
+  }
+  
+  .downlevel .d-byline {
+    padding-top: 0.8em;
+    padding-bottom: 0.8em;
+    font-size: 0.8rem;
+    line-height: 1.8em;
+  }
+  
+  .downlevel .section-separator {
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .downlevel .d-article {
+    font-size: 1.06rem;
+    line-height: 1.7em;
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+  }
+  
+  
+  .downlevel .d-appendix {
+    padding-left: 0;
+    padding-right: 0;
+    max-width: none;
+    font-size: 0.8em;
+    line-height: 1.7em;
+    margin-bottom: 0;
+    color: rgba(0,0,0,0.5);
+    padding-top: 40px;
+    padding-bottom: 48px;
+  }
+  
+  .downlevel .footnotes ol {
+    padding-left: 13px;
+  }
+  
+  .downlevel .base-grid,
+  .downlevel .distill-header,
+  .downlevel .d-title,
+  .downlevel .d-abstract,
+  .downlevel .d-article,
+  .downlevel .d-appendix,
+  .downlevel .distill-appendix,
+  .downlevel .d-byline,
+  .downlevel .d-footnote-list,
+  .downlevel .d-citation-list,
+  .downlevel .distill-footer,
+  .downlevel .appendix-bottom,
+  .downlevel .posts-container {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+  
+  @media(min-width: 768px) {
+    .downlevel .base-grid,
+    .downlevel .distill-header,
+    .downlevel .d-title,
+    .downlevel .d-abstract,
+    .downlevel .d-article,
+    .downlevel .d-appendix,
+    .downlevel .distill-appendix,
+    .downlevel .d-byline,
+    .downlevel .d-footnote-list,
+    .downlevel .d-citation-list,
+    .downlevel .distill-footer,
+    .downlevel .appendix-bottom,
+    .downlevel .posts-container {
+    padding-left: 150px;
+    padding-right: 150px;
+    max-width: 900px;
+  }
+  }
+  
+  .downlevel pre code {
+    display: block;
+    border-left: 2px solid rgba(0, 0, 0, .1);
+    padding: 0 0 0 20px;
+    font-size: 14px;
+  }
+  
+  .downlevel code, .downlevel pre {
+    color: black;
+    background: none;
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    text-align: left;
+    white-space: pre;
+    word-spacing: normal;
+    word-break: normal;
+    word-wrap: normal;
+    line-height: 1.5;
+  
+    -moz-tab-size: 4;
+    -o-tab-size: 4;
+    tab-size: 4;
+  
+    -webkit-hyphens: none;
+    -moz-hyphens: none;
+    -ms-hyphens: none;
+    hyphens: none;
+  }
+  
+  </style>
+  
+  <script type="application/javascript">
+  
+  function is_downlevel_browser() {
+    if (bowser.isUnsupportedBrowser({ msie: "12", msedge: "16"},
+                                   window.navigator.userAgent)) {
+      return true;
+    } else {
+      return window.load_distill_framework === undefined;
+    }
+  }
+  
+  // show body when load is complete
+  function on_load_complete() {
+  
+    // set body to visible
+    document.body.style.visibility = 'visible';
+  
+    // force redraw for leaflet widgets
+    if (window.HTMLWidgets) {
+      var maps = window.HTMLWidgets.findAll(".leaflet");
+      $.each(maps, function(i, el) {
+        var map = this.getMap();
+        map.invalidateSize();
+        map.eachLayer(function(layer) {
+          if (layer instanceof L.TileLayer)
+            layer.redraw();
+        });
+      });
+    }
+  
+    // trigger 'shown' so htmlwidgets resize
+    $('d-article').trigger('shown');
+  }
+  
+  function init_distill() {
+  
+    init_common();
+  
+    // create front matter
+    var front_matter = $('<d-front-matter></d-front-matter>');
+    $('#distill-front-matter').wrap(front_matter);
+  
+    // create d-title
+    $('.d-title').changeElementType('d-title');
+  
+    // create d-byline
+    var byline = $('<d-byline></d-byline>');
+    $('.d-byline').replaceWith(byline);
+  
+    // create d-article
+    var article = $('<d-article></d-article>');
+    $('.d-article').wrap(article).children().unwrap();
+  
+    // move posts container into article
+    $('.posts-container').appendTo($('d-article'));
+  
+    // create d-appendix
+    $('.d-appendix').changeElementType('d-appendix');
+  
+    // create d-bibliography
+    var bibliography = $('<d-bibliography></d-bibliography>');
+    $('#distill-bibliography').wrap(bibliography);
+  
+    // flag indicating that we have appendix items
+    var appendix = $('.appendix-bottom').children('h3').length > 0;
+  
+    // replace citations with <d-cite>
+    $('.citation').each(function(i, val) {
+      appendix = true;
+      var cites = $(this).attr('data-cites').split(" ");
+      var dt_cite = $('<d-cite></d-cite>');
+      dt_cite.attr('key', cites.join());
+      $(this).replaceWith(dt_cite);
+    });
+    // remove refs
+    $('#refs').remove();
+  
+    // replace footnotes with <d-footnote>
+    $('.footnote-ref').each(function(i, val) {
+      appendix = true;
+      var href = $(this).attr('href');
+      var id = href.replace('#', '');
+      var fn = $('#' + id);
+      var fn_p = $('#' + id + '>p');
+      fn_p.find('.footnote-back').remove();
+      var text = fn_p.html();
+      var dtfn = $('<d-footnote></d-footnote>');
+      dtfn.html(text);
+      $(this).replaceWith(dtfn);
+    });
+    // remove footnotes
+    $('.footnotes').remove();
+  
+    $('h1.appendix, h2.appendix').each(function(i, val) {
+      $(this).changeElementType('h3');
+    });
+    $('h3.appendix').each(function(i, val) {
+      var id = $(this).attr('id');
+      $('.d-toc a[href="#' + id + '"]').parent().remove();
+      appendix = true;
+      $(this).nextUntil($('h1, h2, h3')).addBack().appendTo($('d-appendix'));
+    });
+  
+    // show d-appendix if we have appendix content
+    $("d-appendix").css('display', appendix ? 'grid' : 'none');
+  
+    // replace code blocks with d-code
+    $('pre>code').each(function(i, val) {
+      var code = $(this);
+      var pre = code.parent();
+      var clz = "";
+      var language = pre.attr('class');
+      if (language) {
+        // map unknown languages to "clike" (without this they just dissapear)
+        if ($.inArray(language, ["bash", "clike", "css", "go", "html",
+                                 "javascript", "js", "julia", "lua", "markdown",
+                                 "markup", "mathml", "python", "svg", "xml"]) == -1)
+          language = "clike";
+        language = ' language="' + language + '"';
+        var dt_code = $('<d-code block' + language + clz + '></d-code>');
+        dt_code.text(code.text());
+        pre.replaceWith(dt_code);
+      } else {
+        code.addClass('text-output').unwrap().changeElementType('pre');
+      }
+    });
+  
+    // localize layout chunks to just output
+    $('.layout-chunk').each(function(i, val) {
+  
+      // capture layout
+      var layout = $(this).attr('data-layout');
+  
+      // apply layout to markdown level block elements
+      var elements = $(this).children().not('d-code, pre.text-output, script');
+      elements.each(function(i, el) {
+        var layout_div = $('<div class="' + layout + '"></div>');
+        if (layout_div.hasClass('shaded')) {
+          var shaded_content = $('<div class="shaded-content"></div>');
+          $(this).wrap(shaded_content);
+          $(this).parent().wrap(layout_div);
+        } else {
+          $(this).wrap(layout_div);
+        }
+      });
+  
+  
+      // unwrap the layout-chunk div
+      $(this).children().unwrap();
+    });
+  
+    // load distill framework
+    load_distill_framework();
+  
+    // wait for window.distillRunlevel == 4 to do post processing
+    function distill_post_process() {
+  
+      if (!window.distillRunlevel || window.distillRunlevel < 4)
+        return;
+  
+      // hide author/affiliations entirely if we have no authors
+      var front_matter = JSON.parse($("#distill-front-matter").html());
+      var have_authors = front_matter.authors && front_matter.authors.length > 0;
+      if (!have_authors)
+        $('d-byline').addClass('hidden');
+  
+      // table of contents
+      if (have_authors) // adjust border if we are in authors
+        $('.d-toc').parent().addClass('d-article-with-toc');
+  
+      // strip links that point to #
+      $('.authors-affiliations').find('a[href="#"]').removeAttr('href');
+  
+      // hide elements of author/affiliations grid that have no value
+      function hide_byline_column(caption) {
+        $('d-byline').find('h3:contains("' + caption + '")').parent().css('visibility', 'hidden');
+      }
+  
+      // affiliations
+      var have_affiliations = false;
+      for (var i = 0; i<front_matter.authors.length; ++i) {
+        var author = front_matter.authors[i];
+        if (author.affiliation !== "&nbsp;") {
+          have_affiliations = true;
+          break;
+        }
+      }
+      if (!have_affiliations)
+        $('d-byline').find('h3:contains("Affiliations")').css('visibility', 'hidden');
+  
+      // published date
+      if (!front_matter.publishedDate)
+        hide_byline_column("Published");
+  
+      // document object identifier
+      var doi = $('d-byline').find('h3:contains("DOI")');
+      var doi_p = doi.next().empty();
+      if (!front_matter.doi) {
+        // if we have a citation and valid citationText then link to that
+        if ($('#citation').length > 0 && front_matter.citationText) {
+          doi.html('Citation');
+          $('<a href="#citation"></a>')
+            .text(front_matter.citationText)
+            .appendTo(doi_p);
+        } else {
+          hide_byline_column("DOI");
+        }
+      } else {
+        $('<a></a>')
+           .attr('href', "https://doi.org/" + front_matter.doi)
+           .html(front_matter.doi)
+           .appendTo(doi_p);
+      }
+  
+       // change plural form of authors/affiliations
+      if (front_matter.authors.length === 1) {
+        var grid = $('.authors-affiliations');
+        grid.children('h3:contains("Authors")').text('Author');
+        grid.children('h3:contains("Affiliations")').text('Affiliation');
+      }
+  
+      // inject pre code styles (can't do this with a global stylesheet b/c a shadow root is used)
+      $('d-code').each(function(i, val) {
+        var style = document.createElement('style');
+        style.innerHTML = 'pre code { padding-left: 10px; font-size: 12px; border-left: 2px solid rgba(0,0,0,0.1); } ' +
+                          '@media(min-width: 768px) { pre code { padding-left: 18px; font-size: 14px; } }';
+        if (this.shadowRoot)
+          this.shadowRoot.appendChild(style);
+      });
+  
+      // move appendix-bottom entries to the bottom
+      $('.appendix-bottom').appendTo('d-appendix').children().unwrap();
+      $('.appendix-bottom').remove();
+  
+      // clear polling timer
+      clearInterval(tid);
+  
+      // show body now that everything is ready
+      on_load_complete();
+    }
+  
+    var tid = setInterval(distill_post_process, 50);
+    distill_post_process();
+  
+  }
+  
+  function init_downlevel() {
+  
+    init_common();
+  
+     // insert hr after d-title
+    $('.d-title').after($('<hr class="section-separator"/>'));
+  
+    // check if we have authors
+    var front_matter = JSON.parse($("#distill-front-matter").html());
+    var have_authors = front_matter.authors && front_matter.authors.length > 0;
+  
+    // manage byline/border
+    if (!have_authors)
+      $('.d-byline').remove();
+    $('.d-byline').after($('<hr class="section-separator"/>'));
+    $('.d-byline a').remove();
+  
+    // remove toc
+    $('.d-toc-header').remove();
+    $('.d-toc').remove();
+    $('.d-toc-separator').remove();
+  
+    // move appendix elements
+    $('h1.appendix, h2.appendix').each(function(i, val) {
+      $(this).changeElementType('h3');
+    });
+    $('h3.appendix').each(function(i, val) {
+      $(this).nextUntil($('h1, h2, h3')).addBack().appendTo($('.d-appendix'));
+    });
+  
+  
+    // inject headers into references and footnotes
+    var refs_header = $('<h3></h3>');
+    refs_header.text('References');
+    $('#refs').prepend(refs_header);
+  
+    var footnotes_header = $('<h3></h3');
+    footnotes_header.text('Footnotes');
+    $('.footnotes').children('hr').first().replaceWith(footnotes_header);
+  
+    // move appendix-bottom entries to the bottom
+    $('.appendix-bottom').appendTo('.d-appendix').children().unwrap();
+    $('.appendix-bottom').remove();
+  
+    // remove appendix if it's empty
+    if ($('.d-appendix').children().length === 0)
+      $('.d-appendix').remove();
+  
+    // prepend separator above appendix
+    $('.d-appendix').before($('<hr class="section-separator" style="clear: both"/>'));
+  
+    // trim code
+    $('pre>code').each(function(i, val) {
+      $(this).html($.trim($(this).html()));
+    });
+  
+    // move posts-container right before article
+    $('.posts-container').insertBefore($('.d-article'));
+  
+    $('body').addClass('downlevel');
+  
+    on_load_complete();
+  }
+  
+  
+  function init_common() {
+  
+    // jquery plugin to change element types
+    (function($) {
+      $.fn.changeElementType = function(newType) {
+        var attrs = {};
+  
+        $.each(this[0].attributes, function(idx, attr) {
+          attrs[attr.nodeName] = attr.nodeValue;
+        });
+  
+        this.replaceWith(function() {
+          return $("<" + newType + "/>", attrs).append($(this).contents());
+        });
+      };
+    })(jQuery);
+  
+    // prevent underline for linked images
+    $('a > img').parent().css({'border-bottom' : 'none'});
+  
+    // mark non-body figures created by knitr chunks as 100% width
+    $('.layout-chunk').each(function(i, val) {
+      var figures = $(this).find('img, .html-widget');
+      if ($(this).attr('data-layout') !== "l-body") {
+        figures.css('width', '100%');
+      } else {
+        figures.css('max-width', '100%');
+        figures.filter("[width]").each(function(i, val) {
+          var fig = $(this);
+          fig.css('width', fig.attr('width') + 'px');
+        });
+  
+      }
+    });
+  
+    // auto-append index.html to post-preview links in file: protocol
+    // and in rstudio ide preview
+    $('.post-preview').each(function(i, val) {
+      if (window.location.protocol === "file:")
+        $(this).attr('href', $(this).attr('href') + "index.html");
+    });
+  
+    // get rid of index.html references in header
+    if (window.location.protocol !== "file:") {
+      $('.distill-site-header a[href]').each(function(i,val) {
+        $(this).attr('href', $(this).attr('href').replace("index.html", "./"));
+      });
+    }
+  
+    // add class to pandoc style tables
+    $('tr.header').parent('thead').parent('table').addClass('pandoc-table');
+    $('.kable-table').children('table').addClass('pandoc-table');
+  
+    // add figcaption style to table captions
+    $('caption').parent('table').addClass("figcaption");
+  
+    // initialize posts list
+    if (window.init_posts_list)
+      window.init_posts_list();
+  
+    // implmement disqus comment link
+    $('.disqus-comment-count').click(function() {
+      window.headroom_prevent_pin = true;
+      $('#disqus_thread').toggleClass('hidden');
+      if (!$('#disqus_thread').hasClass('hidden')) {
+        var offset = $(this).offset();
+        $(window).resize();
+        $('html, body').animate({
+          scrollTop: offset.top - 35
+        });
+      }
+    });
+  }
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    if (is_downlevel_browser())
+      init_downlevel();
+    else
+      window.addEventListener('WebComponentsReady', init_distill);
+  });
+  
+  </script>
+  
+  <!--/radix_placeholder_distill-->
+  <script src="project_files/jquery-1.11.3/jquery.min.js"></script>
+  <script src="project_files/bowser-1.9.3/bowser.min.js"></script>
+  <script src="project_files/webcomponents-2.0.0/webcomponents.js"></script>
+  <script src="project_files/distill-2.2.21/template.v2.js"></script>
+  <!--radix_placeholder_site_in_header-->
+  <!--/radix_placeholder_site_in_header-->
+
+
+</head>
+
+<body>
+
+<!--radix_placeholder_front_matter-->
+
+<script id="distill-front-matter" type="text/json">
+{"title":"Projections of daily incidence based on past incidence for COVID-19 ","description":"A simple but powerful tool for projecting new cases","authors":[{"author":"Juan Pablo Díaz Martínez","authorURL":"#","affiliation":"UHN, Toronto, ON, Canada","affiliationURL":"https://thebru.ca/Juan_Pablo_Diaz_Martinez"}],"publishedDate":"2020-03-30T00:00:00.000-04:00","citationText":"Martínez, 2020"}
+</script>
+
+<!--/radix_placeholder_front_matter-->
+<!--radix_placeholder_navigation_before_body-->
+<!--/radix_placeholder_navigation_before_body-->
+<!--radix_placeholder_site_before_body-->
+<!--/radix_placeholder_site_before_body-->
+
+<div class="d-title">
+<h1>Projections of daily incidence based on past incidence for COVID-19</h1>
+<p>A simple but powerful tool for projecting new cases</p>
+</div>
+
+<div class="d-byline">
+  Juan Pablo Díaz Martínez  (UHN, Toronto, ON, Canada)<a href="https://thebru.ca/Juan_Pablo_Diaz_Martinez" class="uri">https://thebru.ca/Juan_Pablo_Diaz_Martinez</a>
+  
+<br/>Mar 30, 2020
+</div>
+
+<div class="d-article">
+<h3 class="d-toc-header">Table of Contents</h3>
+<nav class="d-toc" id="TOC">
+<ul>
+<li><a href="#modelling-the-covid-19-epidemic">Modelling the COVID-19 epidemic</a><ul>
+<li><a href="#data">Data</a></li>
+</ul></li>
+<li><a href="#projections">Projections</a><ul>
+<li><a href="#general-idea">General idea</a></li>
+<li><a href="#estimation-of-reproduction-number">Estimation of reproduction number</a></li>
+<li><a href="#projecting-incidence-for-covid-19">Projecting incidence for COVID-19</a></li>
+</ul></li>
+</ul>
+</nav>
+<hr class="d-toc-separator"/>
+<h1 id="modelling-the-covid-19-epidemic">Modelling the COVID-19 epidemic</h1>
+<h2 id="data">Data</h2>
+<p>In order to make this analysis to be reproducible and avoid manual abstracting, this tool will use <a href="https://github.com/CSSEGISandData/COVID-19">collated COVID-19 data</a>, maintained by Johns Hopkins University Center for Systems Science and Engineering (JHU CCSE) and used as the source for <a href="https://www.arcgis.com/apps/opsdashboard/index.html#/bda7594740fd40299423467b48e9ecf6">the dashboard</a> which they provide. For the purpose of this report, our analysis is based only on observed data up to 29 March 2020.</p>
+<h1 id="projections">Projections</h1>
+<h2 id="general-idea">General idea</h2>
+<p>Our projections will rely on a well-established and simple method that assumed the daily incidence, <span class="math inline">\(I_t\)</span>, could be approximated with a Poisson process following the renewal equation (Fraser, 2007):</p>
+<p><span class="math display">\[I_t \sim Pois(R_t\sum_{s=1}^{t} I_{t-s} \omega_s)\]</span></p>
+<p>where <span class="math inline">\(R_t\)</span> is the instantaneous reproduction number and <span class="math inline">\(\omega\)</span> the serial interval (SI) distribution.<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> From this a likelihood of the data given a set of model parameters can be calculated, as well the posterior distribution of <span class="math inline">\(R_t\)</span> given previous observations of incidence and knowledge of the serial interval (Cori et al., 2013).</p>
+<p>The next figure shows how the forecast for future projections work. This figure was taken from <a href="https://europepmc.org/article/med/28351674">Nouvellet <em>et al.</em></a>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="figure" style="text-align: center"><span id="fig:pressure"></span>
+<img src="algo.png" alt="Forecast algorithm" width="287" />
+<p class="caption">
+Figure 1: Forecast algorithm
+</p>
+</div>
+</div>
+<p>Therefore our work relies on simulating trajectories where daily incidence follows a Poisson process determined by a daily infectiousness.</p>
+<h2 id="estimation-of-reproduction-number">Estimation of reproduction number</h2>
+<p>Given the above, it would be useful to estimate the current <em>instantaneous reproduction number</em> <span class="math inline">\(R_{t}\)</span> on a day-by-day basis so as to track the effectiveness of public health interventions. In fact, there are several available methods for estimating <span class="math inline">\(R_{t}\)</span> – exploring all of those is beyond the scope of this tool.</p>
+<p>Instead, we will focus on one method, developed in 2013 by Anne Cori and colleagues at Imperial College, London, which permits estimation of the <em>instantaneous reproduction number</em>, which is exactly want we want in order to track the effectiveness of containment efforts. This method estimates the <em>instantaneous reproduction number</em> for an epidemic over predefined time windows using a Bayesian framework, for a given discrete distribution of the serial interval. Full details are available in the <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3816335/">original paper</a> on the method, with extensions described in a later paper by <a href="https://doi.org/10.1016/j.epidem.2019.100356">Thompson <em>et al.</em></a>. We used the <code>EpiEstim</code> package for <em>R</em>, which implements this method. In genereal there are 2 ways to get the serial interval distribution (usually it is assumed that it follows a gamma distribution:</p>
+<ol type="1">
+<li>Serial interval distribution is directly estimated.</li>
+<li>The user specifies the mean and sd of the serial interval. We can be as “Bayesian” as we want meaning that we can sample this 2 parameters (mean and sd).</li>
+</ol>
+<p>Using Ontario daily incidence data, let’s take a look of the <em>instantaneous reproduction number</em> over time. We used one published estimate of the <em>serial interval</em> distribution, derived from analysis of just 5 primary cases amongst the first 450 cases in Wuhan, published by <a href="https://www.nejm.org/doi/full/10.1056/NEJMoa2001316">Li <em>et al.</em></a>. They estimate the serial interval distribution to have a mean of 7.5 days with a standard deviation of 3.4 days. Recently another estimate was published where the mean estimate of the serial interval distribution was 3.96 days <a href="https://wwwnc.cdc.gov/eid/article/26/6/20-0357_article">Du <em>et al.</em></a>.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="figure">
+<img src="project_files/figure-html5/Cori_uncertain_si_model-1.png" alt="Daily incidence, SI distribution an Estimated R for ON" width="1152" />
+<p class="caption">
+(#fig:Cori_uncertain_si_model)Daily incidence, SI distribution an Estimated R for ON
+</p>
+</div>
+</div>
+<h2 id="projecting-incidence-for-covid-19">Projecting incidence for COVID-19</h2>
+<p>Here we’ll examine the use of the <a href="https://www.repidemicsconsortium.org/projections/"><code>projections</code> package</a>. This package is part of the excellent <a href="https://www.repidemicsconsortium.org"><strong>R</strong> <strong>E</strong>pidemics <strong>Con</strong>sortium (<strong>RECON</strong>) suite</a> which includes libraries for epidemic modelling and control (<code>EpiEstim</code> is also part of this).</p>
+<div class="layout-chunk" data-layout="l-body">
+<p><img src="project_files/figure-html5/projections-1.png" width="1152" /></p>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<pre class="r"><code>
+library(tidyverse)
+library(lubridate)
+library(countrycode)
+library(ggrepel)
+library(prismatic)
+library(ggsci)
+library(paletteer)
+library(incidence)
+library(EpiEstim)
+library(projections)
+library(epitrix)
+library(distcrete)
+library(magrittr)
+
+setwd(&quot;~/tool&quot;)
+countries&lt;-c(&quot;CAN&quot;,&quot;ITA&quot;,&quot;ESP&quot;,&quot;USA&quot;,&quot;MEX&quot;,&quot;BRA&quot;,&quot;ETH&quot;,&quot;COL&quot;,&quot;MYS&quot;)
+
+confirmed_raw &lt;- read_csv(&quot;https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv&quot;, 
+                          col_types = cols())
+deaths_raw &lt;- read_csv(&quot;https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv&quot;, 
+                       col_types = cols())
+
+confirmed_data&lt;-confirmed_raw %&gt;%
+  select(-Lat, -Long) %&gt;%
+  rename(country = `Country/Region`,Province_Re=`Province/State`) %&gt;%
+  mutate(iso3c = countrycode(country,
+                             origin = &quot;country.name&quot;,
+                             destination = &quot;iso3c&quot;)) %&gt;%
+  select(-country) %&gt;%
+  filter(iso3c %in% countries) %&gt;% 
+  pivot_longer(
+    c(-Province_Re,-iso3c), 
+    names_to = &quot;date_str&quot;, 
+    values_to = &quot;confirmed&quot;
+  ) %&gt;%
+  mutate(date = mdy(date_str)) %&gt;%
+  group_by(Province_Re)  %&gt;% 
+  mutate(new_confirmed=c(0,diff(confirmed)))  %&gt;% ungroup() %&gt;%
+  select(iso3c,Province_Re, date,confirmed,new_confirmed) 
+
+deaths_data&lt;-deaths_raw %&gt;%
+  select(-Lat, -Long) %&gt;%
+  rename(country = `Country/Region`,Province_Re=`Province/State`) %&gt;%
+  mutate(iso3c = countrycode(country,
+                             origin = &quot;country.name&quot;,
+                             destination = &quot;iso3c&quot;)) %&gt;%
+  select(-country) %&gt;%
+  filter(iso3c %in% countries) %&gt;% 
+  pivot_longer(
+    c(-Province_Re,-iso3c), 
+    names_to = &quot;date_str&quot;, 
+    values_to = &quot;deaths&quot;
+  ) %&gt;%
+  mutate(date = mdy(date_str)) %&gt;%
+  group_by(Province_Re)  %&gt;% 
+  mutate(new_deaths=c(0,diff(deaths)))  %&gt;% ungroup() %&gt;%
+  select(iso3c,Province_Re, date,deaths,new_deaths) 
+
+
+data_covid &lt;- confirmed_data %&gt;%
+  full_join(deaths_data, by = c(&quot;iso3c&quot;,&quot;Province_Re&quot;, &quot;date&quot;)) 
+
+
+ontario&lt;-data_covid %&gt;% filter(Province_Re==&quot;Ontario&quot;) %&gt;%
+  mutate(iso3c=&quot;Ontario&quot;)
+
+
+plot_project&lt;-function(country=&quot;Ontario&quot;,conf=20,method=c(&quot;Estimate_R&quot;,&quot;Simulate_R&quot;),
+                       pred_days=14,n_sim=1000,mu_R=2.5,sigma_R=0.5,cumul=T,
+                       config_si=list(mean_si = 7.5, std_mean_si = 2, 
+                                      min_mean_si = 1, max_mean_si = 8.4, std_si = 3.4, std_std_si = 1, 
+                                      min_std_si = 0.5, max_std_si = 4, n1 = 1000, n2 = 1000)) {
+  
+  df&lt;-data_covid %&gt;% bind_rows(ontario) %&gt;% 
+    group_by(iso3c,date) %&gt;%
+    summarise_at(vars(-Province_Re),funs(sum)) %&gt;% filter(confirmed&gt;=conf,iso3c==country) %&gt;%
+    mutate(date = ymd(date),data_type=&quot;Observed&quot;) %&gt;%
+    select(date, new_confirmed,iso3c,data_type,confirmed) %&gt;% rename(I=new_confirmed,dates=date) 
+  
+  max_cumul&lt;-df %&gt;% summarise(max_cumul=max(confirmed)) %&gt;% select(max_cumul)
+  max_cumul&lt;-as.numeric(max_cumul)
+  
+  incidence_data&lt;- df %&gt;% uncount(I)
+  
+  incidence_object &lt;- incidence(dates = incidence_data$dates) 
+  param &lt;- gamma_mucv2shapescale(config_si$mean_si, config_si$std_si / config_si$mean_si)
+  w &lt;- distcrete(&quot;gamma&quot;, interval = 1,
+                 shape = param$shape,
+                 scale = param$scale, w = 0.5)
+  date_range &lt;- 1:(length(get_dates(incidence_object)))
+  
+  if (method == &quot;Estimate_R&quot;) {
+    re_est&lt;- estimate_R(df, method = &quot;uncertain_si&quot;, 
+                        config = make_config(config_si))
+    # mean_R0&lt;-tail(re_est$R$`Mean(R)`, n=1) 
+    # std_R0&lt;-tail(re_est$R$`Std(R)`, n=1) 
+    # R &lt;- rnorm(n_sim, mean_R0, std_R0)
+    R_sample &lt;- sample_posterior_R(re_est, n = 1000)
+    pred_growth_var &lt;- project(incidence_object[date_range],
+                               R = R_sample,R_fix_within = T,
+                               si = w,
+                               n_days = pred_days, n_sim = 1000)
+  }
+  
+  R &lt;- rnorm(n_sim, mu_R, sigma_R)
+  pred_growth_var &lt;- project(incidence_object[date_range],
+                             R = R,R_fix_within = F,
+                             si = w,
+                             n_days = pred_days, n_sim = n_sim)
+  
+  if (cumul ==T) {
+    pred_growth_var&lt;-cumulate(pred_growth_var)
+    df&lt;-df %&gt;% mutate(I=confirmed)
+  }
+  
+  ### functions
+  
+  quantile_pal &lt;- grDevices::colorRampPalette(
+    c(&quot;#b3c6ff&quot;, &quot;#d147a3&quot;, &quot;#993366&quot;), bias = 2)
+  
+  color_quantiles &lt;- function(x, palette = quantile_pal) {
+    labels &lt;- as.character(unique(x))
+    dist_from_median &lt;- 50 - abs(50-as.numeric(sub(&quot;%&quot;, &quot;&quot;, labels)))
+    out &lt;- palette(51)[dist_from_median + 1]
+    names(out) &lt;- labels
+    out
+  }
+  
+  
+  
+  transp &lt;- function(col, alpha = .5){
+    res &lt;- apply(grDevices::col2rgb(col), 2,
+                 function(c)
+                   grDevices::rgb(c[1]/255, c[2]/255, c[3]/255, alpha))
+    return(res)
+  }
+  
+  ###################
+  
+  dates &lt;- attr(pred_growth_var, &quot;dates&quot;)
+  stats &lt;- t(apply(pred_growth_var, 1, stats::quantile, c(0.01, .99)))
+  if (cumul ==T) {
+    stats&lt;-stats+max_cumul
+  }
+  
+  temp &lt;- cbind.data.frame(dates, stats)
+  names(temp) &lt;- c(&quot;dates&quot;, &quot;ymin&quot;, &quot;ymax&quot;)
+  
+  
+  ribbon_color &lt;- color_quantiles(c(0.01, .99), quantile_pal)[1]
+  
+  ribbon_color &lt;- transp(ribbon_color, 0.2)
+  out&lt;-ggplot()+
+    geom_ribbon(
+      data = temp,
+      aes(x = dates, ymin = ymin, ymax = ymax),
+      fill = ribbon_color)+geom_point(aes(x=dates,y=I),data = df,color=&quot;darkblue&quot;,size=0.9)+geom_line(aes(x=dates,y=I),
+                                                                                                      size=.6,data = df,color=&quot;darkblue&quot;)+
+    scale_y_continuous(labels = scales::comma_format(accuracy = 1),trans = &quot;log2&quot;,
+                       n.breaks = 10)
+  stats &lt;- t(apply(pred_growth_var, 1, stats::quantile, c(.01,0.25,.5,.75,.99)))
+  if (cumul ==T) {
+    stats&lt;-stats+max_cumul
+  }
+  quantiles &lt;- rep(colnames(stats), each = nrow(stats))
+  quantiles &lt;- factor(quantiles, levels = unique(quantiles))
+  temp &lt;- cbind.data.frame(dates = rep(dates, ncol(stats)),
+                           quantile = quantiles,
+                           value = as.vector(stats),
+                           stringsAsFactors = FALSE)
+  
+  
+  
+  colors &lt;- color_quantiles(temp$quantile, quantile_pal)
+  colors &lt;- transp(colors, 1)
+  ylab &lt;- ifelse(cumul==T,
+                 &quot;Cumulative incidence&quot;,
+                 &quot;Daily incidence&quot;)
+  titlab &lt;- ifelse(cumul==T,
+                   &quot;Cumulative incidence&quot;,
+                   &quot;Daily incidence&quot;)
+  
+  out &lt;- suppressMessages(
+    out +
+      ggplot2::geom_line(
+        data = temp,
+        aes(x = dates, y = value, color = quantile),
+        linetype = 1,
+        size = 1
+      ) + scale_color_manual(values = colors))+
+    labs(title= paste(titlab,&quot;of observed and predicted confirmed cases, &quot;,df$iso3c),
+         x = &quot;Date&quot;, color=&quot;Quantile&quot;,
+         y = paste(ylab,&quot;(log2 scale)&quot;),
+         subtitle = paste(&quot;Data as of&quot;, format(max(data_covid$date), &quot;%A, %B %e, %Y&quot;)))+
+    scale_x_date(date_breaks = &quot;1 week&quot;)+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = rel(2)),plot.title = element_text(size = rel(2), face = &quot;bold&quot;),
+          plot.subtitle = element_text(size = rel(1.5)),
+          axis.text.y = element_text(size = rel(2)),
+          axis.title.x = element_text(size = rel(1.5)),
+          axis.title.y = element_text(size = rel(1.5)),
+          panel.grid.major = element_line(colour = &quot;grey90&quot;, size = .1),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = &quot;grey50&quot;, size = .9))
+  return&lt;-list(re_est=re_est,out=out)
+  return(return)
+}
+
+plot_Ri &lt;- function(estimate_R_obj) {
+  p_I &lt;- plot(estimate_R_obj, &quot;incid&quot;) # plots the incidence
+  p_SI &lt;- plot(estimate_R_obj, &quot;SI&quot;) # plots the serial interval distribution
+  p_Ri &lt;- plot(estimate_R_obj, &quot;R&quot;)
+  return(gridExtra::grid.arrange(p_I, p_SI, p_Ri, ncol = 1))
+}
+
+result&lt;-plot_project(method = &quot;Estimate_R&quot;,cumul = F)</code></pre>
+</div>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>time between onsets of infectors and infectees<a href="#fnref1" class="footnote-back">↩</a></p></li>
+</ol>
+</section>
+<!--radix_placeholder_article_footer-->
+<!--/radix_placeholder_article_footer-->
+</div>
+
+<div class="d-appendix">
+</div>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+<!--radix_placeholder_site_after_body-->
+<!--/radix_placeholder_site_after_body-->
+<!--radix_placeholder_appendices-->
+<div class="appendix-bottom">
+<h3 id="reuse">Reuse</h3>
+<p>Text and figures are licensed under Creative Commons Attribution <a rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. The figures that have been reused from other sources don't fall under this license and can be recognized by a note in their caption: "Figure from ...".</p>
+</div>
+<!--/radix_placeholder_appendices-->
+<!--radix_placeholder_navigation_after_body-->
+<!--/radix_placeholder_navigation_after_body-->
+
+</body>
+
+</html>
