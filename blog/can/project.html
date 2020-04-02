@@ -26,8 +26,8 @@
   <link rel="license" href="https://creativecommons.org/licenses/by-sa/4.0/"/>
   
   <!--  https://schema.org/Article -->
-  <meta property="article:published" itemprop="datePublished" content="2020-03-30"/>
-  <meta property="article:created" itemprop="dateCreated" content="2020-03-30"/>
+  <meta property="article:published" itemprop="datePublished" content="2020-04-01"/>
+  <meta property="article:created" itemprop="dateCreated" content="2020-04-01"/>
   <meta name="article:author" content="Juan Pablo Díaz Martínez"/>
   
   <!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
@@ -45,7 +45,7 @@
   <!--radix_placeholder_rmarkdown_metadata-->
   
   <script type="text/json" id="radix-rmarkdown-metadata">
-  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","creative_commons","output"]}},"value":[{"type":"character","attributes":{},"value":["Projections of daily incidence based on past incidence for COVID-19 "]},{"type":"character","attributes":{},"value":["A simple but powerful tool for projecting new cases"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["affiliation","affiliation_url","name"]}},"value":[{"type":"character","attributes":{},"value":["UHN, Toronto, ON, Canada"]},{"type":"character","attributes":{},"value":["https://thebru.ca/Juan_Pablo_Diaz_Martinez"]},{"type":"character","attributes":{},"value":["Juan Pablo Díaz Martínez"]}]}]},{"type":"character","attributes":{},"value":["Mar 30, 2020"]},{"type":"character","attributes":{},"value":["CC BY-SA"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained","toc","toc_depth"]}},"value":[{"type":"logical","attributes":{},"value":[false]},{"type":"logical","attributes":{},"value":[true]},{"type":"integer","attributes":{},"value":[2]}]}]}]}
+  {"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["title","description","author","date","creative_commons","output"]}},"value":[{"type":"character","attributes":{},"value":["Projections of daily incidence based on past incidence for COVID-19 "]},{"type":"character","attributes":{},"value":["A simple but powerful tool for projecting new cases"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["affiliation","affiliation_url","name"]}},"value":[{"type":"character","attributes":{},"value":["UHN, Toronto, ON, Canada"]},{"type":"character","attributes":{},"value":["https://thebru.ca/Juan_Pablo_Diaz_Martinez"]},{"type":"character","attributes":{},"value":["Juan Pablo Díaz Martínez"]}]}]},{"type":"character","attributes":{},"value":["April 1, 2020"]},{"type":"character","attributes":{},"value":["CC BY-SA"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained","toc","toc_depth"]}},"value":[{"type":"logical","attributes":{},"value":[false]},{"type":"logical","attributes":{},"value":[true]},{"type":"integer","attributes":{},"value":[2]}]}]}]}
   </script>
   <!--/radix_placeholder_rmarkdown_metadata-->
   
@@ -943,7 +943,7 @@
 <!--radix_placeholder_front_matter-->
 
 <script id="distill-front-matter" type="text/json">
-{"title":"Projections of daily incidence based on past incidence for COVID-19 ","description":"A simple but powerful tool for projecting new cases","authors":[{"author":"Juan Pablo Díaz Martínez","authorURL":"#","affiliation":"UHN, Toronto, ON, Canada","affiliationURL":"https://thebru.ca/Juan_Pablo_Diaz_Martinez"}],"publishedDate":"2020-03-30T00:00:00.000-04:00","citationText":"Martínez, 2020"}
+{"title":"Projections of daily incidence based on past incidence for COVID-19 ","description":"A simple but powerful tool for projecting new cases","authors":[{"author":"Juan Pablo Díaz Martínez","authorURL":"#","affiliation":"UHN, Toronto, ON, Canada","affiliationURL":"https://thebru.ca/Juan_Pablo_Diaz_Martinez"}],"publishedDate":"2020-04-01T00:00:00.000-04:00","citationText":"Martínez, 2020"}
 </script>
 
 <!--/radix_placeholder_front_matter-->
@@ -960,7 +960,7 @@
 <div class="d-byline">
   Juan Pablo Díaz Martínez  (UHN, Toronto, ON, Canada)<a href="https://thebru.ca/Juan_Pablo_Diaz_Martinez" class="uri">https://thebru.ca/Juan_Pablo_Diaz_Martinez</a>
   
-<br/>Mar 30, 2020
+<br/>April 1, 2020
 </div>
 
 <div class="d-article">
@@ -980,7 +980,7 @@
 <hr class="d-toc-separator"/>
 <h1 id="modelling-the-covid-19-epidemic">Modelling the COVID-19 epidemic</h1>
 <h2 id="data">Data</h2>
-<p>In order to make this analysis to be reproducible and avoid manual abstracting, this tool will use <a href="https://github.com/CSSEGISandData/COVID-19">collated COVID-19 data</a>, maintained by Johns Hopkins University Center for Systems Science and Engineering (JHU CCSE) and used as the source for <a href="https://www.arcgis.com/apps/opsdashboard/index.html#/bda7594740fd40299423467b48e9ecf6">the dashboard</a> which they provide. For the purpose of this report, our analysis is based only on observed data up to 29 March 2020.</p>
+<p>In order to make this analysis to be reproducible and avoid manual abstracting, this tool will use <a href="https://github.com/CSSEGISandData/COVID-19">collated COVID-19 data</a>, maintained by Johns Hopkins University Center for Systems Science and Engineering (JHU CCSE) and used as the source for <a href="https://www.arcgis.com/apps/opsdashboard/index.html#/bda7594740fd40299423467b48e9ecf6">the dashboard</a> which they provide. For the purpose of this report, our analysis is based only on observed data up to 31 March 2020.</p>
 <h1 id="projections">Projections</h1>
 <h2 id="general-idea">General idea</h2>
 <p>Our projections will rely on a well-established and simple method that assumed the daily incidence, <span class="math inline">\(I_t\)</span>, could be approximated with a Poisson process following the renewal equation (Fraser, 2007):</p>

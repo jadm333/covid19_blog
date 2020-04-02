@@ -5,7 +5,7 @@ author:
 - affiliation: UHN, Toronto, ON, Canada
   affiliation_url: https://thebru.ca/Juan_Pablo_Diaz_Martinez
   name: Juan Pablo Díaz Martínez
-date: "Mar 30, 2020"
+date: "April 1, 2020"
 creative_commons: CC BY-SA
 output:
   distill::distill_article:
@@ -33,7 +33,7 @@ library(epitrix)
 library(distcrete)
 library(magrittr)
 
-setwd("~/tool")
+
 countries<-c("CAN","ITA","ESP","USA","MEX","BRA","ETH","COL","MYS")
 
 confirmed_raw <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", col_types = cols())
@@ -217,7 +217,7 @@ plot_project<-function(country="Ontario",conf=20,method=c("Estimate_R","Simulate
           panel.grid.major = element_line(colour = "grey90", size = .1),
           panel.background = element_blank(),
           axis.line = element_line(colour = "grey50", size = .9))
-  return<-list(re_est=re_est,out=out)
+  return<-list(re_est=re_est,out=out,temp=temp)
   return(return)
 }
 
