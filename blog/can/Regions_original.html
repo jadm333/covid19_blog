@@ -50,7 +50,7 @@
   <!--/radix_placeholder_rmarkdown_metadata-->
   
   <script type="text/json" id="radix-resource-manifest">
-  {"type":"character","attributes":{},"value":["algo.png","iPHIS_simulations.csv","iPHIS_simulations2.csv","LHIN.xlsx","ON_LineListforMOH_UofT.xlsx","ontario.csv","project.html","project_files/bowser-1.9.3/bowser.min.js","project_files/distill-2.2.21/template.v2.js","project_files/figure-html5/Cori_uncertain_si_model-1.png","project_files/figure-html5/Cori_uncertain_si_model_fit_hubei-1.png","project_files/figure-html5/projections-1.png","project_files/jquery-1.11.3/jquery.min.js","project_files/webcomponents-2.0.0/webcomponents.js","Regions.html","Regions_files/bowser-1.9.3/bowser.min.js","Regions_files/distill-2.2.21/template.v2.js","Regions_files/figure-html5/Cori_uncertain_si_model-1.png","Regions_files/figure-html5/projections-1.png","Regions_files/figure-html5/projections2-1.png","Regions_files/figure-html5/projections3-1.png","Regions_files/figure-html5/projections4-1.png","Regions_files/figure-html5/projections5-1.png","Regions_files/figure-html5/projections6-1.png","Regions_files/jquery-1.11.3/jquery.min.js","Regions_files/webcomponents-2.0.0/webcomponents.js","Regions2_files/figure-html5/Cori_uncertain_si_model-1.png","Regions2_files/figure-html5/projections-1.png","Regions2_files/figure-html5/projections2-1.png","Regions2_files/figure-html5/projections3-1.png","Regions2_files/figure-html5/projections4-1.png","Regions2_files/figure-html5/projections5-1.png","Regions2_files/figure-html5/projections6-1.png","simulations.csv"]}
+  {"type":"character","attributes":{},"value":["algo.png","iPHIS_simulations.csv","iPHIS_simulations2.csv","LHIN.xlsx","ON_LineListforMOH_UofT.xlsx","ontario.csv","project.html","project_files/bowser-1.9.3/bowser.min.js","project_files/distill-2.2.21/template.v2.js","project_files/figure-html5/Cori_uncertain_si_model-1.png","project_files/figure-html5/Cori_uncertain_si_model_fit_hubei-1.png","project_files/figure-html5/projections-1.png","project_files/jquery-1.11.3/jquery.min.js","project_files/webcomponents-2.0.0/webcomponents.js","Regions.html","Regions_files/bowser-1.9.3/bowser.min.js","Regions_files/distill-2.2.21/template.v2.js","Regions_files/figure-html5/Cori_uncertain_si_model-1.png","Regions_files/figure-html5/projections-1.png","Regions_files/figure-html5/projections2-1.png","Regions_files/figure-html5/projections3-1.png","Regions_files/figure-html5/projections4-1.png","Regions_files/figure-html5/projections5-1.png","Regions_files/figure-html5/projections6-1.png","Regions_files/jquery-1.11.3/jquery.min.js","Regions_files/webcomponents-2.0.0/webcomponents.js","Regions_original_files/figure-html5/Cori_uncertain_si_model-1.png","Regions_original_files/figure-html5/projections-1.png","Regions_original_files/figure-html5/projections2-1.png","Regions_original_files/figure-html5/projections3-1.png","Regions_original_files/figure-html5/projections4-1.png","Regions_original_files/figure-html5/projections5-1.png","Regions_original_files/figure-html5/projections6-1.png","simulations.csv"]}
   </script>
   <!--radix_placeholder_navigation_in_header-->
   <!--/radix_placeholder_navigation_in_header-->
@@ -928,10 +928,10 @@
   </script>
   
   <!--/radix_placeholder_distill-->
-  <script src="Regions2_files/jquery-1.11.3/jquery.min.js"></script>
-  <script src="Regions2_files/bowser-1.9.3/bowser.min.js"></script>
-  <script src="Regions2_files/webcomponents-2.0.0/webcomponents.js"></script>
-  <script src="Regions2_files/distill-2.2.21/template.v2.js"></script>
+  <script src="Regions_original_files/jquery-1.11.3/jquery.min.js"></script>
+  <script src="Regions_original_files/bowser-1.9.3/bowser.min.js"></script>
+  <script src="Regions_original_files/webcomponents-2.0.0/webcomponents.js"></script>
+  <script src="Regions_original_files/distill-2.2.21/template.v2.js"></script>
   <!--radix_placeholder_site_in_header-->
   <!--/radix_placeholder_site_in_header-->
 
@@ -1006,7 +1006,7 @@ Figure 1: Forecast algorithm
 <p>Using Ontario daily incidence data, let’s take a look of the <em>instantaneous reproduction number</em> over time. We used one published estimate of the <em>serial interval</em> distribution, derived from analysis of just 5 primary cases amongst the first 450 cases in Wuhan, published by <a href="https://www.nejm.org/doi/full/10.1056/NEJMoa2001316">Li <em>et al.</em></a>. They estimate the serial interval distribution to have a mean of 7.5 days with a standard deviation of 3.4 days. Recently another estimate was published where the mean estimate of the serial interval distribution was 3.96 days <a href="https://wwwnc.cdc.gov/eid/article/26/6/20-0357_article">Du <em>et al.</em></a>.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="figure">
-<img src="Regions2_files/figure-html5/Cori_uncertain_si_model-1.png" alt="Daily incidence, SI distribution an Estimated R for ON" width="1152" />
+<img src="Regions_original_files/figure-html5/Cori_uncertain_si_model-1.png" alt="Daily incidence, SI distribution an Estimated R for ON" width="1152" />
 <p class="caption">
 (#fig:Cori_uncertain_si_model)Daily incidence, SI distribution an Estimated R for ON
 </p>
@@ -1015,22 +1015,22 @@ Figure 1: Forecast algorithm
 <h2 id="projecting-incidence-for-covid-19">Projecting incidence for COVID-19</h2>
 <p>Here we’ll examine the use of the <a href="https://www.repidemicsconsortium.org/projections/"><code>projections</code> package</a>. This package is part of the excellent <a href="https://www.repidemicsconsortium.org"><strong>R</strong> <strong>E</strong>pidemics <strong>Con</strong>sortium (<strong>RECON</strong>) suite</a> which includes libraries for epidemic modelling and control (<code>EpiEstim</code> is also part of this). We show projections for Ontario and its health regions for the next 14 days.</p>
 <div class="layout-chunk" data-layout="l-body">
-<p><img src="Regions2_files/figure-html5/projections-1.png" width="1152" /></p>
+<p><img src="Regions_original_files/figure-html5/projections-1.png" width="1152" /></p>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<p><img src="Regions2_files/figure-html5/projections2-1.png" width="1152" /></p>
+<p><img src="Regions_original_files/figure-html5/projections2-1.png" width="1152" /></p>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<p><img src="Regions2_files/figure-html5/projections3-1.png" width="1152" /></p>
+<p><img src="Regions_original_files/figure-html5/projections3-1.png" width="1152" /></p>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<p><img src="Regions2_files/figure-html5/projections4-1.png" width="1152" /></p>
+<p><img src="Regions_original_files/figure-html5/projections4-1.png" width="1152" /></p>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<p><img src="Regions2_files/figure-html5/projections5-1.png" width="1152" /></p>
+<p><img src="Regions_original_files/figure-html5/projections5-1.png" width="1152" /></p>
 </div>
 <div class="layout-chunk" data-layout="l-body">
-<p><img src="Regions2_files/figure-html5/projections6-1.png" width="1152" /></p>
+<p><img src="Regions_original_files/figure-html5/projections6-1.png" width="1152" /></p>
 </div>
 <section class="footnotes">
 <hr />
