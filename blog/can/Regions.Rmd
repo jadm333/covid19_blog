@@ -257,11 +257,11 @@ toronto<-plot_project(country = "Toronto",method = "Estimate_R",cumul = F)
 west<-plot_project(country = "West",method = "Estimate_R",cumul = F)
 
 write.csv(result$temp,file = "Ontario.csv")
-write.csv(central$temp,file = "Ontario.csv")
-write.csv(east$temp,file = "Ontario.csv")
-write.csv(north$temp,file = "Ontario.csv")
-write.csv(toronto$temp,file = "Ontario.csv")
-write.csv(west$temp,file = "Ontario.csv")
+write.csv(central$temp,file = "Central.csv")
+write.csv(east$temp,file = "East.csv")
+write.csv(north$temp,file = "North.csv")
+write.csv(toronto$temp,file = "Toronto.csv")
+write.csv(west$temp,file = "West.csv")
 ```
 
 # Modelling the COVID-19 epidemic 
