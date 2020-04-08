@@ -94,10 +94,10 @@ ontario<-regions %>%
 
 
 plot_project<-function(country="Ontario",conf=20,method=c("Estimate_R","Simulate_R"),
-                       pred_days=14,n_sim=1000,mu_R=2.5,sigma_R=0.5,cumul=T) {
+                       pred_days=30,n_sim=1000,mu_R=2.5,sigma_R=0.5,cumul=T) {
   
   df<-regions %>% bind_rows(ontario)  %>% mutate(date=ymd(date)) %>%
-    filter(confirmed>=conf,iso3c==country) %>% 
+    filter(confirmed>=conf,iso3c==country,date<="2020-03-30") %>% 
     rename(I=new_confirmed,dates=date) 
   
   max_cumul<-df %>% summarise(max_cumul=max(confirmed)) %>% select(max_cumul)
