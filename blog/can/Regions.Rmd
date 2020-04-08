@@ -41,38 +41,40 @@ regions %>% filter(is.na(FSA) | str_detect(FSA, "^1") |str_detect(FSA, "^X")) %>
   group_by(Diagnosing_Health_Unit_Area_Desc) %>% tally()
 
 
-regions<-regions %>% mutate(FSA2=if_else(is.na(FSA) | str_detect(FSA, "^1") |str_detect(FSA, "^X"),case_when(
-  Diagnosing_Health_Unit_Area_Desc=="BRANT COUNTY (2227)"  ~ "N3S",
-  Diagnosing_Health_Unit_Area_Desc=="CHATHAM-KENT (2240)"  ~ "N7W",
-  Diagnosing_Health_Unit_Area_Desc=="CITY OF HAMILTON (2237)"  ~ "N3R",
-  Diagnosing_Health_Unit_Area_Desc=="CITY OF OTTAWA (2251)"  ~ "K1Y",
-  Diagnosing_Health_Unit_Area_Desc=="DURHAM REGION (2230)"  ~ "K9K",
-  Diagnosing_Health_Unit_Area_Desc=="EASTERN ONTARIO (2258)"  ~ "K9L",
-  Diagnosing_Health_Unit_Area_Desc=="GREY BRUCE (2233)"  ~ "N0K",
-  Diagnosing_Health_Unit_Area_Desc=="HALDIMAND-NORFOLK (2234)"  ~ "L8G",
-  Diagnosing_Health_Unit_Area_Desc=="HALIBURTON, KAWARTHA, PINE RIDGE (2235)"  ~ "L1H",
-  Diagnosing_Health_Unit_Area_Desc=="HALTON REGION (2236)"  ~ "L5E",
-  Diagnosing_Health_Unit_Area_Desc=="HASTINGS & PRINCE EDWARD COUNTIES (2238)"  ~ "K7N",
-  Diagnosing_Health_Unit_Area_Desc=="KINGSTON, FRONTENAC, LENNOX & ADDINGTON (2241)"  ~ "K7N",
-  Diagnosing_Health_Unit_Area_Desc=="LAMBTON COUNTY (2242)"  ~ "N0P",
-  Diagnosing_Health_Unit_Area_Desc=="MIDDLESEX-LONDON (2244)"  ~ "N0J",
-  Diagnosing_Health_Unit_Area_Desc=="NIAGARA REGION (2246)"  ~ "L8M",
-  Diagnosing_Health_Unit_Area_Desc=="OXFORD ELGIN-ST.THOMAS (4913)"  ~ "N0K",
-  Diagnosing_Health_Unit_Area_Desc=="PEEL REGION (2253)"  ~ "L5E",
-  Diagnosing_Health_Unit_Area_Desc=="PETERBOROUGH COUNTY-CITY (2255)"  ~ "M1R",
-  Diagnosing_Health_Unit_Area_Desc=="RENFREW COUNTY AND DISTRICT (2257)"  ~ "K1K",
-  Diagnosing_Health_Unit_Area_Desc=="SIMCOE MUSKOKA DISTRICT (2260)"  ~ "P1L",
-  Diagnosing_Health_Unit_Area_Desc=="SUDBURY AND DISTRICT (2261)"  ~ "P0L",
-  Diagnosing_Health_Unit_Area_Desc=="THUNDER BAY DISTRICT (2262)"  ~ "P0W",
-  Diagnosing_Health_Unit_Area_Desc=="TORONTO (3895)"  ~ "M5P",
-  Diagnosing_Health_Unit_Area_Desc=="WATERLOO REGION (2265)"  ~ "N2A",
-  Diagnosing_Health_Unit_Area_Desc=="WELLINGTON-DUFFERIN-GUELPH (2266)"  ~ "N1M",
-  Diagnosing_Health_Unit_Area_Desc=="WINDSOR-ESSEX COUNTY (2268)"  ~ "N0P",
-  Diagnosing_Health_Unit_Area_Desc=="YORK REGION (2270)"  ~ "M9M"
-),FSA),Accurate_Episode_Date=ymd(Accurate_Episode_Date)
-) %>% select(FSA2, Accurate_Episode_Date) %>% rename(FSA=FSA2)
+# regions<-regions %>% mutate(FSA2=if_else(is.na(FSA) | str_detect(FSA, "^1") |str_detect(FSA, "^X"),case_when(
+#   Diagnosing_Health_Unit_Area_Desc=="BRANT COUNTY (2227)"  ~ "N3S",
+#   Diagnosing_Health_Unit_Area_Desc=="CHATHAM-KENT (2240)"  ~ "N7W",
+#   Diagnosing_Health_Unit_Area_Desc=="CITY OF HAMILTON (2237)"  ~ "N3R",
+#   Diagnosing_Health_Unit_Area_Desc=="CITY OF OTTAWA (2251)"  ~ "K1Y",
+#   Diagnosing_Health_Unit_Area_Desc=="DURHAM REGION (2230)"  ~ "K9K",
+#   Diagnosing_Health_Unit_Area_Desc=="EASTERN ONTARIO (2258)"  ~ "K9L",
+#   Diagnosing_Health_Unit_Area_Desc=="GREY BRUCE (2233)"  ~ "N0K",
+#   Diagnosing_Health_Unit_Area_Desc=="HALDIMAND-NORFOLK (2234)"  ~ "L8G",
+#   Diagnosing_Health_Unit_Area_Desc=="HALIBURTON, KAWARTHA, PINE RIDGE (2235)"  ~ "L1H",
+#   Diagnosing_Health_Unit_Area_Desc=="HALTON REGION (2236)"  ~ "L5E",
+#   Diagnosing_Health_Unit_Area_Desc=="HASTINGS & PRINCE EDWARD COUNTIES (2238)"  ~ "K7N",
+#   Diagnosing_Health_Unit_Area_Desc=="KINGSTON, FRONTENAC, LENNOX & ADDINGTON (2241)"  ~ "K7N",
+#   Diagnosing_Health_Unit_Area_Desc=="LAMBTON COUNTY (2242)"  ~ "N0P",
+#   Diagnosing_Health_Unit_Area_Desc=="MIDDLESEX-LONDON (2244)"  ~ "N0J",
+#   Diagnosing_Health_Unit_Area_Desc=="NIAGARA REGION (2246)"  ~ "L8M",
+#   Diagnosing_Health_Unit_Area_Desc=="OXFORD ELGIN-ST.THOMAS (4913)"  ~ "N0K",
+#   Diagnosing_Health_Unit_Area_Desc=="PEEL REGION (2253)"  ~ "L5E",
+#   Diagnosing_Health_Unit_Area_Desc=="PETERBOROUGH COUNTY-CITY (2255)"  ~ "M1R",
+#   Diagnosing_Health_Unit_Area_Desc=="RENFREW COUNTY AND DISTRICT (2257)"  ~ "K1K",
+#   Diagnosing_Health_Unit_Area_Desc=="SIMCOE MUSKOKA DISTRICT (2260)"  ~ "P1L",
+#   Diagnosing_Health_Unit_Area_Desc=="SUDBURY AND DISTRICT (2261)"  ~ "P0L",
+#   Diagnosing_Health_Unit_Area_Desc=="THUNDER BAY DISTRICT (2262)"  ~ "P0W",
+#   Diagnosing_Health_Unit_Area_Desc=="TORONTO (3895)"  ~ "M5P",
+#   Diagnosing_Health_Unit_Area_Desc=="WATERLOO REGION (2265)"  ~ "N2A",
+#   Diagnosing_Health_Unit_Area_Desc=="WELLINGTON-DUFFERIN-GUELPH (2266)"  ~ "N1M",
+#   Diagnosing_Health_Unit_Area_Desc=="WINDSOR-ESSEX COUNTY (2268)"  ~ "N0P",
+#   Diagnosing_Health_Unit_Area_Desc=="YORK REGION (2270)"  ~ "M9M"
+# ),FSA),Accurate_Episode_Date=ymd(Accurate_Episode_Date)
+# ) %>% select(FSA2, Accurate_Episode_Date) %>% rename(FSA=FSA2)
 
 
+regions<-regions %>% mutate(Accurate_Episode_Date=ymd(Accurate_Episode_Date)) %>% 
+  select(FSA, Accurate_Episode_Date) 
 
 LHIN<- read_excel("LHIN.xlsx")
 regions<-LHIN %>%
@@ -96,9 +98,17 @@ ontario<-regions %>%
 plot_project<-function(country="Ontario",conf=20,method=c("Estimate_R","Simulate_R"),
                        pred_days=30,n_sim=1000,mu_R=2.5,sigma_R=0.5,cumul=T) {
   
+  
+  
   df<-regions %>% bind_rows(ontario)  %>% mutate(date=ymd(date)) %>%
     filter(confirmed>=conf,iso3c==country,date<="2020-03-30") %>% 
     rename(I=new_confirmed,dates=date) 
+  
+  if (country=="North") {
+    df<-regions %>% bind_rows(ontario)  %>% mutate(date=ymd(date)) %>%
+    filter(confirmed>=conf,iso3c==country) %>% 
+    rename(I=new_confirmed,dates=date) 
+  }
   
   max_cumul<-df %>% summarise(max_cumul=max(confirmed)) %>% select(max_cumul)
   max_cumul<-as.numeric(max_cumul)
@@ -218,7 +228,7 @@ plot_project<-function(country="Ontario",conf=20,method=c("Estimate_R","Simulate
     labs(title= paste(titlab,"of observed and predicted confirmed cases, ",df$iso3c),
          x = "Date", color="Quantile",
          y = paste(ylab,"(log2 scale)"),
-         subtitle = paste("Data as of", format(max(ontario$date), "%A, %B %e, %Y")))+
+         subtitle = paste("Data as of", format(max(df$dates), "%A, %B %e, %Y")))+
     scale_x_date(date_breaks = "1 week")+
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = rel(2)),plot.title = element_text(size = rel(2), face = "bold"),
           plot.subtitle = element_text(size = rel(1.5)),
@@ -245,6 +255,13 @@ east<-plot_project(country = "East",method = "Estimate_R",cumul = F)
 north<-plot_project(country = "North",method = "Estimate_R",cumul = F)
 toronto<-plot_project(country = "Toronto",method = "Estimate_R",cumul = F)
 west<-plot_project(country = "West",method = "Estimate_R",cumul = F)
+
+write.csv(result$temp,file = "Ontario.csv")
+write.csv(central$temp,file = "Ontario.csv")
+write.csv(east$temp,file = "Ontario.csv")
+write.csv(north$temp,file = "Ontario.csv")
+write.csv(toronto$temp,file = "Ontario.csv")
+write.csv(west$temp,file = "Ontario.csv")
 ```
 
 # Modelling the COVID-19 epidemic 

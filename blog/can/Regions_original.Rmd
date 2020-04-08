@@ -245,6 +245,7 @@ east<-plot_project(country = "East",method = "Estimate_R",cumul = F)
 north<-plot_project(country = "North",method = "Estimate_R",cumul = F)
 toronto<-plot_project(country = "Toronto",method = "Estimate_R",cumul = F)
 west<-plot_project(country = "West",method = "Estimate_R",cumul = F)
+
 ```
 
 # Modelling the COVID-19 epidemic 
