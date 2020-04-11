@@ -50,7 +50,7 @@
   <!--/radix_placeholder_rmarkdown_metadata-->
   
   <script type="text/json" id="radix-resource-manifest">
-  {"type":"character","attributes":{},"value":["Acu_mex.png","Mexico_covid_files/bowser-1.9.3/bowser.min.js","Mexico_covid_files/distill-2.2.21/template.v2.js","Mexico_covid_files/figure-html5/acum_casos-1.png","Mexico_covid_files/figure-html5/acum_muerte-1.png","Mexico_covid_files/jquery-1.11.3/jquery.min.js","Mexico_covid_files/webcomponents-2.0.0/webcomponents.js"]}
+  {"type":"character","attributes":{},"value":["Acu_mex.png","COVID-19-up-to-date.csv","datos_muertos.xlsx","figures/MEX_three_pannel_base-746629.pdf","guzmart/covid_mex_20200316.xlsx","interventions.csv","Mexico_covid_files/bowser-1.9.3/bowser.min.js","Mexico_covid_files/distill-2.2.21/template.v2.js","Mexico_covid_files/figure-html5/acum_casos-1.png","Mexico_covid_files/figure-html5/acum_muerte-1.png","Mexico_covid_files/jquery-1.11.3/jquery.min.js","Mexico_covid_files/webcomponents-2.0.0/webcomponents.js","model.png","regions.csv","results/base-2020-04-08-stanfit.Rdata","results/base-2020-04-08.Rdata","results/base-2020-04-09-stanfit.Rdata","results/base-2020-04-09.Rdata","results/base-2020-04-11-stanfit.Rdata","results/base-2020-04-11.Rdata","serial_interval.csv","stan-models/base.rds","stan-models/base.stan","utils/geom-stepribbon.r","weighted_fatality.csv"]}
   </script>
   <!--radix_placeholder_navigation_in_header-->
   <!--/radix_placeholder_navigation_in_header-->
@@ -973,6 +973,7 @@
 <li><a href="#casos-confirmados">Casos confirmados</a></li>
 </ul></li>
 <li><a href="#análisis-de-la-epidemia-en-méxico">Análisis de la epidemia en México</a></li>
+<li><a href="#estimación-del-número-de-infectados-y-del-impacto-de-susana-distancia.">Estimación del número de infectados y del impacto de Susana Distancia.</a></li>
 </ul>
 </nav>
 <hr class="d-toc-separator"/>
@@ -980,7 +981,7 @@
 <p>Este post nace despúes de 2 semanas de distanciamento social en Toronto, Canadá. Para los que no me conocen, actualmente soy doctorante en la Universidad de Toronto donde mi línea de investigación es el aprendizaje estadístico como herramienta de predicción en enfermedades que tienden a progresar a a través del tiempo (e.g. cáncer). Cuento con una posición de “Bioestadístico” en <a href="https://www.uhn.ca/corporate/AboutUHN">University Health Network</a> el cual aglomera diferentes hospitales para una mejor colabaración en diferentes temas de investigación.</p>
 <p>Es importante notar que este post no ha sido revisado por pares y que mi linea de investigación no es el modelaje de epidemias como la que vivimos ahorita. Este post tiene como objetivo discutir algunos aspectos importantes de la epidemia en nuestro país y hacer unas predicciones sencillas de lo que está por venir. Es importante notar que este análisis usa datos que se han capturado hasta Marzo 28. El link para el código de este post se encuentre en un repositorio de Github el cuál podrán encontrar al final de este post; las gráficas y el análisis fueron hechos en <code>R</code>, utilizando en su mayoría librerías como <code>dplyr</code>, <code>ggplot2</code> y una serie de librerías que están aglomeradas en <a href="https://www.repidemicsconsortium.org"><strong>R</strong> <strong>E</strong>pidemics <strong>Con</strong>sortium (<strong>RECON</strong>) suite</a>.</p>
 <h1 id="epidemia-en-méxico">Epidemia en México</h1>
-<p>Mucho se ha hablado en las conferencias vespertinas relacionadas a COVID-19 acerca del número de casos nuevos desde que la epidemia llegó a nuestro país y si el gobierno ha hecho pruebas suficientes. Antes de describir de cualquier análisis es importante describir dos aspectos importrantes respecto a las características epidemiológicas en nuestro país: + Cómo funciona el sistema epidemiológico + Como se alimenta diariamente el número de casos confirmados</p>
+<p>Mucho se ha hablado en las conferencias vespertinas relacionadas a COVID-19 acerca del número de casos nuevos desde que la epidemia llegó a nuestro país y si el gobierno ha hecho pruebas suficientes. Antes de describir de cualquier análisis es importante describir dos aspectos importrantes respecto a las características epidemiológicas en nuestro país: 1. Cómo funciona el sistema epidemiológico 2. Como se alimenta diariamente el número de casos confirmados</p>
 <h2 id="sistema-epidemiológico-en-méxico">Sistema epidemiológico en México</h2>
 <p>El Dr. Hugo López Gatell ha mencionada en muchísimas ocasiones como funciona el sistema centinela en nuestro país (la siguiente <a href="https://elpais.com/sociedad/2020-03-26/lopez-gatell-en-mexico-queremos-un-balance-entre-proteger-la-salud-y-a-las-economias-mas-debilitadas.html">entrevista</a> es muestra de lo anterior). A manera de resumen, la idea del programa es que “en vez de recopilar grandes cantidades de datos de calidad deficiente, hay que concentrarse en recopilar datos de buena calidad de un número reducido de centros centinela seleccionados cuidadosamente”, de acuerdo al documento de la <a href="https://www.paho.org/revelac-i/wp-content/uploads/2015/10/2015-cha-guia-operativa-vigilancia-centinela-irag.pdf">OMS</a> actualizado en 2014. El proceso es buscar COVID-19 en pacientes negativos a la prueba de influenza para ver si hay transmisión comunitaria; Alberto Díaz Cayeros hace una descripción de éste y discute posibles fallas que pueden ocurrir en este <a href="https://medium.com/@adiazcayeros/the-balancing-act-in-mexicos-covid-19-response-a6955ec629fc">sistema</a>.</p>
 <p>Este sistema funcionó para H1N1 en el 2009 y todos esperamos que funcione para COVID-19. ¿Por qué utilizar este sistema y no pruebas masivas como lo hizo Corea del Sur? Creo que es por dos razones: el sistema ha funcionado y es eficiente debido las limitaciones de recursos en Salud en nuestro país. Es importante aclarar que estas limitaciones no son nuevas y es producto de un porcentaje muy bajo del gasto en el sector salud como porcentaje del PIB durante varios años de acuerdo a la <a href="https://stats.oecd.org/">OCDE</a>.</p>
@@ -993,11 +994,11 @@
 <p>Asimismo, se modificó el porcentaje de muestreo para vigilar los casos de COVID-19. Solo se realizará la prueba al 10% de los casos sospechosos sin síntomas o síntomas leves. A su vez, se realizará la prueba al 100% de los casos sospechosos con sintomología grave o que cumplan con la definición infección respiratoria aguda grave (IRAG). Es importante recalcar que el gobierno ha recalcado que <strong>todos los casos sospechosos sin importar si se les realizó la prueba deberán de permanecer en aislamiento </strong>.</p>
 <h1 id="análisis-de-la-epidemia-en-méxico">Análisis de la epidemia en México</h1>
 <p>Antes de presentar datos y gráficas me gustaría enfatizar en <strong>2 aspectos importantes al considerar la presentación y análisis de datos de casos confirmados con COVID-19</strong>:</p>
-<ul>
+<ol type="1">
 <li>La comparación entre países (e.g. incidencia acumulada) debe de realizarse con mucho cuidado. Esto debido a lo expuesto en la sección anterior; los países tienen distintos sistemas epidemiológicos y diferentes recursos, por lo tanto la cantidad de casos confirmados está en función de la cantidad de pruebas que puedan realizar. Es muy importante recalcar esto ya que esta comparación es la que más noticias engañosas y falsas que al menos yo he encontrado en redes sociales (ver <a href="https://twitter.com/samuel_garcias/status/1243696094682456068">aquí</a>).</li>
 <li>La comparación entre países debe de realizarze desde un punto en común en el tiempo ya que la epidemia entra a cada país en momentos distintos. Esto tiene mucha importancia sobre todo al presentar gráficas e ilustraciones ya sea para mostrar la incidencia (casos nuevos) o incidencia acumulada.</li>
-</ul>
-<p>Que sí podemos rescatar al comparar el número de casos confirmados entre diferentes países (o estados). La siguiente gráfica muestra el número de casos confirmados acumulados con COVID-19 desde que se comfirmó el paciente número 100. Decidí transformar el eje de las <span class="math inline">\(y\)</span> al aplicarle el logaritmo base 2; esta transformación ayuda a una mejor interpretación de los datos ya que es más fácil para el lector ver cuanto tiempo se tarda un país en tener el doble de casos confirmados en un periodo determinado de tiempo. Asimismo al transformar los datos la serie de tiempo presenta un comportamiento más lneal.</p>
+</ol>
+<p>¿Qué sí podemos rescatar cuando comparamos casos confirmados entre diferentes países?. La siguiente gráfica muestra el número de casos confirmados acumulados con COVID-19 desde que se comfirmó el paciente número 100. Decidí transformar el eje de las <span class="math inline">\(y\)</span> al aplicarle el logaritmo base 2; esta transformación ayuda a una mejor interpretación de los datos ya que es más fácil para el lector ver cuanto tiempo se tarda un país en tener el doble de casos confirmados en un periodo determinado de tiempo. Asimismo al transformar los datos la serie de tiempo presenta un comportamiento más lneal.</p>
 <div class="layout-chunk" data-layout="l-body">
 <p><img src="Mexico_covid_files/figure-html5/acum_casos-1.png" width="960" /></p>
 </div>
@@ -1006,7 +1007,24 @@
 <div class="layout-chunk" data-layout="l-body">
 <p><img src="Mexico_covid_files/figure-html5/acum_muerte-1.png" width="960" /></p>
 </div>
-<p>Estos datos son los que personalmente me preocupan ya que México podría llegar a 4,000 muertos aproximadamente 20 días después del quinto deceso si las muertes incremental al doble cada 2 días (mismo caso que España). Volvemos al punto central que discutí en los datos de casos confirmados, <strong>lo importante es ver cuánto cambia la pendiente a través del tiempo</strong>.</p>
+<p>Estos datos son los que personalmente me preocupan ya que México podría llegar a 4,000 muertos aproximadamente 20 días después del quinto deceso si las muertes incremental al doble cada 2 días (mismo caso que España). Volvemos al punto central que discutí en los datos de casos confirmados, <strong>lo importante es ver cuánto cambia la pendiente a través del tiempo</strong>. Hay que tener en cuenta que muchas de las muertes no serán diagnosticadas como muertes por COVID-19 (eso pasa en México y en otros países), por eso mientras el aumento sea constante no habría de preocuparse por esta sub-estimación.</p>
+<h1 id="estimación-del-número-de-infectados-y-del-impacto-de-susana-distancia.">Estimación del número de infectados y del impacto de Susana Distancia.</h1>
+<p>Debido a la naturaleza e importancia de la enfermedad, diferentes revistas indexadas en el mundo han acelerado su proceso de revisión para poder publicar diferentes artículos académicos referentes al SARS-COV 19. A mí siempre me han llamado la atención aquellos artículos que describen modelos de predicción.</p>
+<p>En la sección anterior mencioné que es mejor utilizar el número de muertes si queremos hacer algún tipo de comparación o inferencia. Algunas limitaciones de este número son:</p>
+<ol type="1">
+<li>Posible sub-estimación de muertes por COVID 19 - Esto debido a que habrá casos donde SARS-COV 19 no haya sido identificado.</li>
+<li>Posible retraso en la captura de muertes - Hemos visto en algunas conferencias vespertinas casos donde la confirmación de SARS-COV 19 llega después del fallecimiento.</li>
+</ol>
+<p>Estas limitaciones no afectarán ningún modelo o inferencia que se quiera realizar siempre y cuando ambas se mantengan constantes en el tiempo.</p>
+<p>¿De qué manera se puede estimar el número de infectados y el impacto de las medidas realizadas por el gobierno federal para incentivar el distanciamiento social? Utizando la historia natural de la enfermedad.</p>
+<div class="layout-chunk" data-layout="l-body">
+<div class="figure" style="text-align: center"><span id="fig:pressure"></span>
+<img src="model.png" alt="Forecast algorithm" width="488" />
+<p class="caption">
+Figure 1: Forecast algorithm
+</p>
+</div>
+</div>
 <section class="footnotes">
 <hr />
 <ol>

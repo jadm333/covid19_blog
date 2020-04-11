@@ -206,87 +206,22 @@ Dado que es difícil comparar casos confirmados por todo lo explicado en párraf
 Estos datos son los que personalmente me preocupan ya que México podría llegar a 4,000 muertos aproximadamente 20 días después del quinto deceso si las muertes incremental al doble cada 2 días (mismo caso que España). Volvemos al punto central que discutí en los datos de casos confirmados, **lo importante es ver cuánto cambia la pendiente a través del tiempo**. Hay que tener en cuenta que muchas de las muertes no serán diagnosticadas como muertes por COVID-19 (eso pasa en México y en otros países), por eso mientras el aumento sea constante no habría de preocuparse por esta sub-estimación.
 
 
-# Proyecciones de los casos confirmados.
+# Estimación del número de infectados y del impacto de Susana Distancia.
 
-Para poder tomar decisiones es importante tener una idea de como se comportará la epidemia en el futuro. Tenemos una idea de otros países ya que la epidemia entró tarde en nuestro país. Con diferentes herramientas cuantitativas  también podemos predecir el futuro con los datos que tenemos hasta el 29 de marzo 
+Debido a la naturaleza e importancia de la enfermedad, diferentes revistas indexadas en el mundo han acelerado su proceso de revisión para poder publicar diferentes artículos académicos referentes al SARS-COV 19. A mí siempre me han llamado la atención aquellos artículos que describen modelos de predicción. 
 
-Here we'll examine the use of the [`projections` package](https://www.repidemicsconsortium.org/projections/), which is also part of the **RECON** suite. From its manual page:
+En la sección anterior mencioné que es mejor utilizar el número de muertes si queremos hacer algún tipo de comparación o inferencia. Algunas limitaciones de este número son:
 
-> `projections` uses data on daily incidence, the _serial interval_ (time between onsets of infectors and infectees) and the reproduction number to simulate plausible epidemic trajectories and project future incidence. It relies on a branching process where daily incidence follows a Poisson process determined by a daily infectiousness, computed as:
-$$\lambda_t = \sum_{s=1}^{t-1} y_s w(t-s)$$
+1. Posible sub-estimación de muertes por COVID 19 - Esto debido a que habrá casos donde SARS-COV 19 no haya sido identificado.
+2. Posible retraso en la captura de muertes - Hemos visto en algunas conferencias vespertinas casos donde la confirmación de SARS-COV 19 llega después del fallecimiento.
 
-> where $w()$ is the probability mass function (PMF) of the serial interval, and $y_s$ is the incidence at time $s$.
-We can just re-use the `incidence()` object for the Hubei incidence data which we created above for the purposes of fitting log-linear models to the epidemic trajectories. We'll also use the discrete _serial interval_ distribution we created, and the median _reproduction number_ we calculated above for the growth and decay phases of the outbreak in Hubei province, in order to test the projection of those phases of the epidemic in Hubei forwards. We'll base these projections on only the first parts of the growth and decay phases, so that we can then compare the resulting projections against the observed incidence data for the balance of thoe phases. If the projections match that observed reality reasonably well, we can then have some confidence in any forward projections into the future which we make. Such projections are obviously valuable for planning purposes -- for example, during the decay phase of an epidemic, projections of the decay can be used to inform how long public health interventions such as transport lock-downs and mandatory social isolation may have to be kept in place. 
+Estas limitaciones no afectarán ningún modelo o inferencia que se quiera realizar siempre y cuando ambas se mantengan constantes en el tiempo. 
 
-First we'll project the Hubei province incidence data for the first part of the growth phase of the epidemic. Recall that we found the peak of the epidemic (daily incidence) curve for Hubei to have occured on `r format(hubei_incidence_peak, "%d %B %Y")`. Thus, we'll base our projection on the Hubei incidence data up to 14 days before that peak, and compare with the observed data. Click on the `Code` button to see the details.
+¿De qué manera se puede estimar el número de infectados y el impacto de las medidas realizadas por el gobierno federal para incentivar el distanciamiento social? Utizando la historia natural de la enfermedad. El Imperial College de Reino Unido publicó el 30 de marzo un modelo [modelo de predicción](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-13-europe-npi-impact/) de muertes, infectados y efectos de diferentes medidas para "aplanar la curva". Con el fin de tener una mejor imagen de lo que pasa con COVID-19, el anterior modelo fue adaptado utilizando los datos oficiales reportados en nuestro país. La Figura 1 muestra el modelo de predicción.
 
-```{r test_projection_Hubei_growth, echo=TRUE, tidy=TRUE, message=FALSE, warning=FALSE}
-set.seed(1)
-pred_fwd_days <- 10
-date_range <- 1:(which(get_dates(hubei_incidence_object) == hubei_incidence_peak) - pred_fwd_days)
-test_pred_growth <- project(hubei_incidence_object[date_range],
-                            R = median(growth_R0),
-                            si = w,
-                            n_days = pred_fwd_days, n_sim = 1000)
-# convert the test_pred_growth matrix to a data frame and get the median 
-# incidence for all the simulations for each date
-test_pred_growth_median_counts <- test_pred_growth %>% 
-  as.data.frame() %>%
-  pivot_longer(-dates, 
-               names_to="simulation", 
-               values_to="incidence") %>%
-  group_by(dates) %>%
-  summarise(incident_cases=as.integer(median(incidence))) %>%
-  mutate(data_type = "projection")
-test_pred_growth_median_counts %>%
-  bind_rows(tibble(dates=get_dates(hubei_incidence_object),
-                   incident_cases=get_counts(hubei_incidence_object),
-                   data_type="observed")) %>%
-  ggplot(aes(x=dates, y=incident_cases, colour=data_type)) +
-    geom_point() +
-    geom_line() +
-    labs(x="", y="Daily incident confirmed cases",
-         title="Observed versus growth-phase projection of incident cases\nin Hubei province",
-         subtitle=paste("(projection based on observed case counts up to", 
-                        format(hubei_incidence_peak - days(pred_fwd_days), "%d %B %Y"),
-                        ")")) +
-         theme(legend.position="top", legend.title = element_blank())
+```{r pressure, echo=FALSE, fig.cap="Forecast algorithm",fig.align="center"}
+knitr::include_graphics("model.png")
 ```
 
-OK, that's impressive! The projection, based only on observed data up to `r format(hubei_incidence_peak - days(pred_fwd_days), "%d %B %Y")`, is in remarkably close agreement with the observed data. Let's do the same for the decay phase, this time holding out 5 days of the observed decay from our prediction.
 
-```{r test_projection_Hubei_decay, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
-set.seed(1)
-pred_fwd_days <- 0 # 5
-date_range <- which(get_dates(hubei_incidence_object) == hubei_incidence_peak):(length(get_dates(hubei_incidence_object)) - pred_fwd_days)
-date_range <- which(get_dates(hubei_incidence_object) == hubei_incidence_peak):(length(get_dates(hubei_incidence_object)) - pred_fwd_days)
-test_pred_decay <- project(hubei_incidence_object[date_range],
-                            R = median(decay_R0),
-                            si = w,
-                            n_days = 60, n_sim = 1000)
-# convert the test_pred_decay matrix to a data frame and get the median 
-# incidence for all the simulations for each date
-test_pred_decay_median_counts <- test_pred_decay %>% 
-  as.data.frame() %>%
-  pivot_longer(-dates, 
-               names_to="simulation", 
-               values_to="incidence") %>%
-  group_by(dates) %>%
-  summarise(incident_cases=as.integer(median(incidence))) %>%
-  mutate(data_type = "projection")
-test_pred_decay_median_counts %>%
-  bind_rows(tibble(dates=get_dates(hubei_incidence_object),
-                   incident_cases=get_counts(hubei_incidence_object),
-                   data_type="observed")) %>%
-  ggplot(aes(x=dates, y=incident_cases, colour=data_type)) +
-    geom_point() +
-    geom_line() +
-    labs(x="", y="Daily incident confirmed cases",
-         title="Observed versus decay-phase projection of incident cases\nin Hubei province",
-         subtitle=paste("(projection based on observed case counts in decay phase up to", 
-          format(get_dates(hubei_incidence_object)[(length(get_dates(hubei_incidence_object)) - pred_fwd_days)], "%d %B %Y"),
-          ")")) +
-     theme(legend.position="top", legend.title = element_blank())
-```
 
-Based on that projection, it will take until the beginning of April for the outbreak in Hubei to be extinguished. But perhaps that is too conservative a prediction? We'll re-visit these predictions in a later post, in the light of further incidence data.
