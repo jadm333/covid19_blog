@@ -33,7 +33,6 @@ library(epitrix)
 library(distcrete)
 library(magrittr)
 
-setwd("C:/Users/juand/OneDrive/Documents/Covid Mexico")
 
 countries<-c("ITA","ESP","USA","MEX")
 

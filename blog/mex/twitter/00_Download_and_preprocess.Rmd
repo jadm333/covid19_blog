@@ -30,9 +30,6 @@ access_token_secret  <- Sys.getenv("access_token_secret", unset= NA)
 ```
 
 
-
-
-
 ```{r}
 token <- create_token(
   app = "rstatsjournalismresearch",
@@ -57,7 +54,7 @@ df_tweets_search <- search_tweets2(
   include_rts = F,
   verbose = T
 )
-file = glue("../../../data/df_tweets_search_{format(Sys.time(), '%Y_%m_%d')}.rds")
+file = glue("~/Covid/covid19_blog/blog/mex/twitter/df_tweets_search_{format(Sys.time(), '%Y_%m_%d')}.rds")
 
 saveRDS(df_tweets_search, file)
 ```
@@ -140,6 +137,7 @@ df_match_por_municipio = df_clean %>%
   regex_inner_join(df_municipios, by = c(clean_text = "municipio_name"))
 
 nrow(df_match_por_municipio)
+
 ```
 
 Via __Fuzzy Matching__ :

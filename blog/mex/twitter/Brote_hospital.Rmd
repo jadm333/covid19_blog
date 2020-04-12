@@ -1,0 +1,79 @@
+---
+title: "Brotes hospitalarios por COVID-19 en México"
+description: |
+  No sé que poner aquí.
+author:
+  - name: José Antonio y Juan Pablo Díaz Martínez
+    url: https://example.com/norajones
+    affiliation: Spacely Sprockets
+    affiliation_url: https://example.com/spacelysprokets
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(mxmaps)
+library(viridis)
+library(scales)
+library(readr)
+library(glue)
+library(fuzzyjoin)
+
+muertes_mx <- 
+  read_csv("https://raw.githubusercontent.com/mariorz/covid19-mx-time-series/master/data/covid19_deaths_mx.csv") %>% 
+  pivot_longer(-Estado, names_to = "date", values_to = "deaths") %>% 
+  mutate(date = dmy(date)) %>% rename(iso3c=Estado) %>% 
+  group_by(iso3c)  %>% 
+  mutate(new_deaths=c(0,diff(deaths)))  %>% ungroup() %>%
+  select(iso3c, date,deaths,new_deaths) 
+
+
+confirmados_mx <- 
+  read_csv("https://raw.githubusercontent.com/mariorz/covid19-mx-time-series/master/data/covid19_confirmed_mx.csv") %>% 
+  pivot_longer(-Estado, names_to = "date", values_to = "confirmed") %>% 
+  mutate(date = dmy(date)) %>% rename(iso3c=Estado) %>% 
+  group_by(iso3c)  %>% 
+  mutate(new_confirmed=c(0,diff(confirmed)))  %>% ungroup() %>%
+  select(iso3c, date,confirmed,new_confirmed) 
+
+estados <- confirmados_mx %>%
+  full_join(muertes_mx, by = c("iso3c", "date"))
+
+mexico<-estados %>% 
+  group_by(date) %>%
+  summarise_at(vars(-iso3c),funs(sum)) %>% mutate(iso3c="MEX") %>% bind_rows(estados)
+
+registro<-read_excel("registro.xlsx")
+registro<-registro %>% mutate(fecha=dmy(fecha))
+
+df_municipios<-df_mxmunicipio
+
+df_final<-df_municipios %>% 
+  regex_left_join(registro, by = c(municipio_name = "municipio")) %>%
+  left_join(estados, by = c(state_name = "iso3c",fecha = "date")) %>% 
+  mutate_at(c(21,27:30), ~replace(., is.na(.), 0))
+
+df_final<- df_final %>% mutate(value=if_else(confirmed==0,0,casos/confirmed))
+
+gg = MXMunicipioChoropleth$new(df_final[,c("region","value")])
+
+gg$title <- "Brotes hospitalarios como porcentaje del número confirmado de casos acumulados"
+gg$set_num_colors(1)
+gg$ggplot_scale <- scale_fill_viridis("percent", labels = percent)
+
+```
+
+# Introducción
+
+La idea de este proyecto nace por lo que están experimentando los profesionales de la salud en nuestro país. En estos días hemos visto como médicos y [enfermeras](https://www.eluniversal.com.mx/estados/covid-19-reportan-6-quejas-por-agresiones-enfermeras-en-jalisco) han sufrido diferentes agresiones por el estigma que conlleva esta enfermedad. Asimsimo hemos observado diferentes manifestaciones en hospitales por parte de estos profesionales ante la falta de [insumos](https://politica.expansion.mx/mexico/2020/03/24/personal-medico-del-imss-protesta-por-falta-de-insumos-ante-el-covid-19). 
+
+```{r}
+gg$render()
+```
+
+
+
