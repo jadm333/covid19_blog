@@ -50,7 +50,7 @@
   <!--/radix_placeholder_rmarkdown_metadata-->
   
   <script type="text/json" id="radix-resource-manifest">
-  {"type":"character","attributes":{},"value":["Acu_mex.png","COVID-19-up-to-date.csv","datos_muertos.xlsx","figures/MEX_three_pannel_base-746629.pdf","guzmart/covid_mex_20200316.xlsx","interventions.csv","Mexico_covid_files/bowser-1.9.3/bowser.min.js","Mexico_covid_files/distill-2.2.21/template.v2.js","Mexico_covid_files/figure-html5/acum_casos-1.png","Mexico_covid_files/figure-html5/acum_muerte-1.png","Mexico_covid_files/jquery-1.11.3/jquery.min.js","Mexico_covid_files/webcomponents-2.0.0/webcomponents.js","model.png","regions.csv","results/base-2020-04-08-stanfit.Rdata","results/base-2020-04-08.Rdata","results/base-2020-04-09-stanfit.Rdata","results/base-2020-04-09.Rdata","results/base-2020-04-11-stanfit.Rdata","results/base-2020-04-11.Rdata","serial_interval.csv","stan-models/base.rds","stan-models/base.stan","utils/geom-stepribbon.r","weighted_fatality.csv"]}
+  {"type":"character","attributes":{},"value":["Acu_mex.png","COVID-19-up-to-date.csv","datos_muertos.xlsx","figures/MEX_three_pannel_base-746629.pdf","guzmart/covid_mex_20200316.xlsx","interventions.csv","Mexico_covid_files/bowser-1.9.3/bowser.min.js","Mexico_covid_files/distill-2.2.21/template.v2.js","Mexico_covid_files/figure-html5/acum_casos-1.png","Mexico_covid_files/figure-html5/acum_muerte-1.png","Mexico_covid_files/jquery-1.11.3/jquery.min.js","Mexico_covid_files/webcomponents-2.0.0/webcomponents.js","model.png","regions.csv","results/base-2020-04-11-stanfit.Rdata","results/base-2020-04-11.Rdata","serial_interval.csv","stan-models/base.rds","stan-models/base.stan","utils/geom-stepribbon.r","weighted_fatality.csv"]}
   </script>
   <!--radix_placeholder_navigation_in_header-->
   <!--/radix_placeholder_navigation_in_header-->
@@ -973,7 +973,9 @@
 <li><a href="#casos-confirmados">Casos confirmados</a></li>
 </ul></li>
 <li><a href="#análisis-de-la-epidemia-en-méxico">Análisis de la epidemia en México</a></li>
-<li><a href="#estimación-del-número-de-infectados-y-del-impacto-de-susana-distancia.">Estimación del número de infectados y del impacto de Susana Distancia.</a></li>
+<li><a href="#estimación-del-número-de-infectados-y-del-impacto-de-susana-distancia.">Estimación del número de infectados y del impacto de Susana Distancia.</a><ul>
+<li><a href="#muertes-observadas">Muertes observadas</a></li>
+</ul></li>
 </ul>
 </nav>
 <hr class="d-toc-separator"/>
@@ -1016,7 +1018,7 @@
 <li>Posible retraso en la captura de muertes - Hemos visto en algunas conferencias vespertinas casos donde la confirmación de SARS-COV 19 llega después del fallecimiento.</li>
 </ol>
 <p>Estas limitaciones no afectarán ningún modelo o inferencia que se quiera realizar siempre y cuando ambas se mantengan constantes en el tiempo.</p>
-<p>¿De qué manera se puede estimar el número de infectados y el impacto de las medidas realizadas por el gobierno federal para incentivar el distanciamiento social? Utizando la historia natural de la enfermedad.</p>
+<p>¿De qué manera se puede estimar el número de infectados y el impacto de las medidas realizadas por el gobierno federal para incentivar el distanciamiento social? Utizando la historia natural de la enfermedad. El Imperial College de Reino Unido publicó el 30 de marzo un modelo <a href="https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-13-europe-npi-impact/">modelo de predicción</a> de muertes, infectados y efectos de diferentes medidas para “aplanar la curva”. Con el fin de tener una mejor imagen de lo que pasa con COVID-19, el anterior modelo fue adaptado utilizando los datos oficiales reportados en nuestro país. La Figura 1 muestra el modelo de predicción.</p>
 <div class="layout-chunk" data-layout="l-body">
 <div class="figure" style="text-align: center"><span id="fig:pressure"></span>
 <img src="model.png" alt="Forecast algorithm" width="488" />
@@ -1025,10 +1027,14 @@ Figure 1: Forecast algorithm
 </p>
 </div>
 </div>
+<p>El modelo utiliza las muertes observadas de acuerdo a los datos oficiales del gobierno de México.La Figura 1 muestra el nivel jerárquico (de abajo hacia arriba) que nos permite relacionar el impacto de diferentes intervenciones (i.e. cierre de escuelas,etc.) y las muertes observadas. Dada la relación que existe entre los diferentes parámetros a estimar, el modelo realiza la inferencia utilizando un enfoque Bayesiano mediante <code>stan</code>, un lenguaje de programación específco para inferencia Bayesiana. La relación entre los parámetros se explica a grandes razgos a continuación utilizando la misma notación que el modelo original.</p>
+<h2 id="muertes-observadas">Muertes observadas</h2>
+<p>Día con día el gobierno federal nos infroma de el número de muertes observadas <span class="math inline">\(D_t\)</span> para los d+ias <span class="math inline">\(t\in1,...,n\)</span>. Estas muertes diarias son modeladas utilizando el valor esperado de las muertes diarias, es decir, <span class="math inline">\(d_t=\mathbf{E}[D_t]\)</span>. El modelo asume que <span class="math inline">\(D_t\)</span> tiene una distribución binomial negativa<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> con los siguientes parámetros:</p>
 <section class="footnotes">
 <hr />
 <ol>
 <li id="fn1"><p>Recordemos que a todos los graves sí se les realiza la prueba<a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>Asumo que utlizaron esta distribución para permitir sobredispersión<a href="#fnref2" class="footnote-back">↩</a></p></li>
 </ol>
 </section>
 <!--radix_placeholder_article_footer-->

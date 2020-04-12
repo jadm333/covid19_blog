@@ -78,7 +78,7 @@ deaths_data<-deaths_raw %>%
 
 
 data_covid <- confirmed_data %>%
-  full_join(deaths_data, by = c("iso3c","Province_Re", "date"))
+  full_join(deaths_data, by = c("iso3c","Province_Re", "date")) %>% mutate(date=if_else(iso3c=="MEX",date-1,date))
 
 ontario<-data_covid %>% filter(Province_Re=="Ontario") %>%
   mutate(iso3c="Ontario")
@@ -223,5 +223,8 @@ Estas limitaciones no afectarán ningún modelo o inferencia que se quiera reali
 knitr::include_graphics("model.png")
 ```
 
+El modelo utiliza las muertes observadas de acuerdo a los datos oficiales del gobierno de México.La Figura 1 muestra el nivel jerárquico (de abajo hacia arriba) que nos permite relacionar el impacto de diferentes intervenciones (i.e. cierre de escuelas,etc.) y las muertes observadas. Dada la relación que existe entre los diferentes parámetros a estimar, el modelo realiza la inferencia utilizando un enfoque Bayesiano mediante `stan`, un lenguaje de programación específco para inferencia Bayesiana. La relación entre los parámetros se explica a grandes razgos a continuación utilizando la misma notación que el modelo original.
 
+## Muertes observadas
 
+Día con día el gobierno federal nos infroma de el número de muertes observadas $D_t$ para los d+ias $t\in1,...,n$. Estas muertes diarias son modeladas utilizando el valor esperado de las muertes diarias, es decir, $d_t=\mathbf{E}[D_t]$. El modelo asume que $D_t$ tiene una distribución binomial negativa^[Asumo que utlizaron esta distribución para permitir sobredispersión] con los siguientes parámetros:
