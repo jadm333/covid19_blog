@@ -1752,33 +1752,454 @@ summary {
 <!-- rnb-text-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShkb3RlbnYpXG4jIExvYWQgZW52aXJvbWVudCBmaWxlXG5sb2FkX2RvdF9lbnYoZmlsZSA9ICdlbnYuZW52JylcbiMgU2V0dGluZyBrZXlzIHZhcmlhYmxlc1xuXG5hcGlfa2V5ICA8LSBTeXMuZ2V0ZW52KFwiYXBpX2tleVwiLCB1bnNldD0gTkEpXG5hcGlfc2VjcmV0X2tleSAgPC0gU3lzLmdldGVudihcImFwaV9zZWNyZXRfa2V5XCIsIHVuc2V0PSBOQSlcbmFjY2Vzc190b2tlbiAgPC0gU3lzLmdldGVudihcImFjY2Vzc190b2tlblwiLCB1bnNldD0gTkEpXG5hY2Nlc3NfdG9rZW5fc2VjcmV0ICA8LSBTeXMuZ2V0ZW52KFwiYWNjZXNzX3Rva2VuX3NlY3JldFwiLCB1bnNldD0gTkEpXG5gYGAifQ== -->
+<pre class="r"><code>library(dotenv)
+# Load enviroment file
+load_dot_env(file = 'env.env')
+# Setting keys variables
+
+api_key  &lt;- Sys.getenv(&quot;api_key&quot;, unset= NA)
+api_secret_key  &lt;- Sys.getenv(&quot;api_secret_key&quot;, unset= NA)
+access_token  &lt;- Sys.getenv(&quot;access_token&quot;, unset= NA)
+access_token_secret  &lt;- Sys.getenv(&quot;access_token_secret&quot;, unset= NA)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucnQgPC0gc2VhcmNoX3R3ZWV0cyhcbiAgXCJob3NwaXRhbCBjYXNvc1wiLCBuID0gMTAwLCByZXRyeW9ucmF0ZWxpbWl0ID0gRixnZW9jb2RlID0gbWV4aWNvX2Nvb3JkLGluY2x1ZGVfcnRzID0gRlxuKVxuYGBgIn0= -->
-<pre class="r"><code>rt &lt;- search_tweets(
-  &quot;hospital casos&quot;, n = 100, retryonratelimit = F,geocode = mexico_coord,include_rts = F
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudG9rZW4gPC0gY3JlYXRlX3Rva2VuKFxuICBhcHAgPSBcInJzdGF0c2pvdXJuYWxpc21yZXNlYXJjaFwiLFxuICBjb25zdW1lcl9rZXkgPSBhcGlfa2V5LFxuICBjb25zdW1lcl9zZWNyZXQgPSBhcGlfc2VjcmV0X2tleSxcbiAgYWNjZXNzX3Rva2VuID0gYWNjZXNzX3Rva2VuLFxuICBhY2Nlc3Nfc2VjcmV0ID0gYWNjZXNzX3Rva2VuX3NlY3JldClcbmBgYCJ9 -->
+<pre class="r"><code>token &lt;- create_token(
+  app = &quot;rstatsjournalismresearch&quot;,
+  consumer_key = api_key,
+  consumer_secret = api_secret_key,
+  access_token = access_token,
+  access_secret = access_token_secret)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-text-begin -->
+<p>Only download if necessary:</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGZfdHdlZXRzX3NlYXJjaCA8LSBzZWFyY2hfdHdlZXRzMihcbiAgcSA9IGMoXCJob3NwaXRhbCBicm90ZSBsYW5nOmVzXCIsIFwiaG9zcGl0YWwgYnJvdGVzIGxhbmc6ZXNcIiwgXCJob3NwaXRhbCBjYXNvcyBsYW5nOmVzXCIpLFxuICBuID0gMTgwMDAsXG4gIHJldHJ5b25yYXRlbGltaXQgPSBGLFxuICBnZW9jb2RlID0gbWV4aWNvX2Nvb3JkLFxuICBpbmNsdWRlX3J0cyA9IEYsXG4gIHZlcmJvc2UgPSBUXG4pXG5gYGAifQ== -->
+<pre class="r"><code>df_tweets_search &lt;- search_tweets2(
+  q = c(&quot;hospital brote lang:es&quot;, &quot;hospital brotes lang:es&quot;, &quot;hospital casos lang:es&quot;),
+  n = 18000,
+  retryonratelimit = F,
+  geocode = mexico_coord,
+  include_rts = F,
+  verbose = T
 )</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG5Eb3dubG9hZGluZyBbLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS1dICAgMSVcbkRvd25sb2FkaW5nIFs+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLV0gICAyJVxuRG93bmxvYWRpbmcgWz4tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tXSAgIDMlXG5Eb3dubG9hZGluZyBbLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS1dICAgMSVcbkRvd25sb2FkaW5nIFstLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLV0gICAxJVxuRG93bmxvYWRpbmcgWz4tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tXSAgIDIlXG5Eb3dubG9hZGluZyBbPi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS1dICAgMyVcbkRvd25sb2FkaW5nIFs9Pi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLV0gICA0JVxuRG93bmxvYWRpbmcgWz0+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tXSAgIDUlXG5Eb3dubG9hZGluZyBbPT4tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS1dICAgNiVcbkRvd25sb2FkaW5nIFs9PT4tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLV0gICA2JVxuRG93bmxvYWRpbmcgWz09Pi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tXSAgIDclXG4ifQ== -->
+<pre><code>
+Downloading [-----------------------------------------]   1%
+Downloading [&gt;----------------------------------------]   2%
+Downloading [&gt;----------------------------------------]   3%
+Downloading [-----------------------------------------]   1%
+Downloading [-----------------------------------------]   1%
+Downloading [&gt;----------------------------------------]   2%
+Downloading [&gt;----------------------------------------]   3%
+Downloading [=&gt;---------------------------------------]   4%
+Downloading [=&gt;---------------------------------------]   5%
+Downloading [=&gt;---------------------------------------]   6%
+Downloading [==&gt;--------------------------------------]   6%
+Downloading [==&gt;--------------------------------------]   7%</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZmlsZSA9IGdsdWUoXCIuLi8uLi8uLi9kYXRhL2RmX3R3ZWV0c19zZWFyY2hfe2Zvcm1hdChTeXMudGltZSgpLCAnJVlfJW1fJWQnKX0ucmRzXCIpXG5cbnNhdmVSRFMoZGZfdHdlZXRzX3NlYXJjaCwgZmlsZSlcbmBgYCJ9 -->
+<pre class="r"><code>file = glue(&quot;../../../data/df_tweets_search_{format(Sys.time(), '%Y_%m_%d')}.rds&quot;)
+
+saveRDS(df_tweets_search, file)</code></pre>
+<!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
+<p>else load:</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZmlsZSA9IFwiLi4vLi4vLi4vZGF0YS9kZl90d2VldHNfc2VhcmNoXzIwMjBfMDRfMTEucmRzXCJcbmRmX3R3ZWV0c19zZWFyY2ggPSByZWFkUkRTKGZpbGUpXG5gYGAifQ== -->
+<pre class="r"><code>file = &quot;../../../data/df_tweets_search_2020_04_11.rds&quot;
+df_tweets_search = readRDS(file)</code></pre>
+<!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
+<p>Processing</p>
+<p>Columnas necesarias:</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYXMuaW50ZWdlcihzdHJfbWF0Y2gocnQkdGV4dCwgXCIoP2kpKFxcXFxkKylcXFxccypcXFxcYmNhc286P1wiKVssMl0pXG5cbmRmX214bXVuaWNpcGlvJG11bmljaXBpb19uYW1lXG5cbnJ0JHRleHRcbmBgYCJ9 -->
-<pre class="r"><code>as.integer(str_match(rt$text, &quot;(?i)(\\d+)\\s*\\bcaso:?&quot;)[,2])
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY29sdW1uYXMgPSBjKFxuICBcInN0YXR1c19pZFwiLFxuICBcImNyZWF0ZWRfYXRcIixcbiAgXCJzY3JlZW5fbmFtZVwiLFxuICBcInRleHRcIixcbiAgXCJmYXZvcml0ZV9jb3VudFwiLFxuICBcInJldHdlZXRfY291bnRcIixcbiAgXCJxdW90ZV9jb3VudFwiLFxuICBcInJlcGx5X2NvdW50XCIsXG4gIFwiaGFzaHRhZ3NcIixcbiAgXCJzeW1ib2xzXCIsXG4gIFwidXJsc19leHBhbmRlZF91cmxcIixcbiAgXCJuYW1lXCIsXG4gIFwidmVyaWZpZWRcIlxuKVxuZGZfdHdlZXRzX3NlYXJjaF9yZWQgPSBkZl90d2VldHNfc2VhcmNoICU+JSBzZWxlY3QoISFlbnF1byhjb2x1bW5hcykpXG5gYGAifQ== -->
+<pre class="r"><code>columnas = c(
+  &quot;status_id&quot;,
+  &quot;created_at&quot;,
+  &quot;screen_name&quot;,
+  &quot;text&quot;,
+  &quot;favorite_count&quot;,
+  &quot;retweet_count&quot;,
+  &quot;quote_count&quot;,
+  &quot;reply_count&quot;,
+  &quot;hashtags&quot;,
+  &quot;symbols&quot;,
+  &quot;urls_expanded_url&quot;,
+  &quot;name&quot;,
+  &quot;verified&quot;
+)
+df_tweets_search_red = df_tweets_search %&gt;% select(!!enquo(columnas))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Obtenemos posibles casos:</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGZfY2Fzb3MgPSBkZl90d2VldHNfc2VhcmNoX3JlZCAlPiUgXG4gIG11dGF0ZShjYXNvc19tYXRjaCA9IHN0cl9leHRyYWN0KHRleHQsIFwiXFxcXGJbMC05XXsxLDN9KCxbMC05XXszfSkqKFxcXFxzKmNhc29zPylcXFxcYlwiKSkgJT4lIFxuICBmaWx0ZXIoIWlzLm5hKGNhc29zX21hdGNoKSkgJT4lIFxuICBtdXRhdGUoY2Fzb3NfbnVtID0gc3RyX2V4dHJhY3QoY2Fzb3NfbWF0Y2gsIFwiXFxcXGJbMC05XXsxLDN9KCxbMC05XXszfSkqXCIpKSAlPiUgXG4gIG11dGF0ZSggbnVtZXJvX2Nhc29zID0gYXMubnVtZXJpYyhzdHJfcmVwbGFjZV9hbGwoY2Fzb3NfbnVtLCBcIix8XFxcXC5cIiwgXCJcIikpIClcbmBgYCJ9 -->
+<pre class="r"><code>df_casos = df_tweets_search_red %&gt;% 
+  mutate(casos_match = str_extract(text, &quot;\\b[0-9]{1,3}(,[0-9]{3})*(\\s*casos?)\\b&quot;)) %&gt;% 
+  filter(!is.na(casos_match)) %&gt;% 
+  mutate(casos_num = str_extract(casos_match, &quot;\\b[0-9]{1,3}(,[0-9]{3})*&quot;)) %&gt;% 
+  mutate( numero_casos = as.numeric(str_replace_all(casos_num, &quot;,|\\.&quot;, &quot;&quot;)) )</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Limpiamos el texto:</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGZfY2xlYW4gPSBkZl9jYXNvcyAlPiUgXG4gIG11dGF0ZShjbGVhbl90ZXh0ID0gcGxhaW5fdHdlZXRzKHRleHQpKSAlPiUgXG4gIG11dGF0ZShjbGVhbl90ZXh0ID0gc3RyX3JlcGxhY2VfYWxsKGNsZWFuX3RleHQsIFwiI3xAXCIsIFwiXCIpKVxuXG5gYGAifQ== -->
+<pre class="r"><code>df_clean = df_casos %&gt;% 
+  mutate(clean_text = plain_tweets(text)) %&gt;% 
+  mutate(clean_text = str_replace_all(clean_text, &quot;#|@&quot;, &quot;&quot;))
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Match en dos diferentes niveles estado y municipio:</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaHRtbFRhYmxlKGhlYWQoZGZfbXhzdGF0ZSkpXG5gYGAifQ== -->
+<pre class="r"><code>htmlTable(head(df_mxstate))</code></pre>
+<!-- rnb-source-end -->
+<p>
+<!-- rnb-html-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbImh0bWwiLCJodG1sVGFibGUiLCJjaGFyYWN0ZXIiXSwic2l6aW5nUG9saWN5IjpbXX19 -->
 
-df_mxmunicipio$municipio_name
+<table class='gmisc_table' style='border-collapse: collapse; margin-top: 1em; margin-bottom: 1em;' >
+<thead>
+<tr>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey;'> </th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>region</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>state_name</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>state_name_official</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>state_abbr</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>state_abbr_official</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>pop</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>pop_male</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>pop_female</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>afromexican</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>part_afromexican</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>indigenous</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>part_indigenous</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style='text-align: left;'>1</td>
+<td style='text-align: center;'>01</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>AGS</td>
+<td style='text-align: center;'>Ags.</td>
+<td style='text-align: center;'>1312544</td>
+<td style='text-align: center;'>640091</td>
+<td style='text-align: center;'>672453</td>
+<td style='text-align: center;'>653</td>
+<td style='text-align: center;'>4559</td>
+<td style='text-align: center;'>153395</td>
+<td style='text-align: center;'>18716</td>
+</tr>
+<tr>
+<td style='text-align: left;'>2</td>
+<td style='text-align: center;'>02</td>
+<td style='text-align: center;'>Baja California</td>
+<td style='text-align: center;'>Baja California</td>
+<td style='text-align: center;'>BC</td>
+<td style='text-align: center;'>BC</td>
+<td style='text-align: center;'>3315766</td>
+<td style='text-align: center;'>1650341</td>
+<td style='text-align: center;'>1665425</td>
+<td style='text-align: center;'>7445</td>
+<td style='text-align: center;'>10432</td>
+<td style='text-align: center;'>283055</td>
+<td style='text-align: center;'>38391</td>
+</tr>
+<tr>
+<td style='text-align: left;'>3</td>
+<td style='text-align: center;'>03</td>
+<td style='text-align: center;'>Baja California Sur</td>
+<td style='text-align: center;'>Baja California Sur</td>
+<td style='text-align: center;'>BCS</td>
+<td style='text-align: center;'>BCS</td>
+<td style='text-align: center;'>712029</td>
+<td style='text-align: center;'>359137</td>
+<td style='text-align: center;'>352892</td>
+<td style='text-align: center;'>11032</td>
+<td style='text-align: center;'>5132</td>
+<td style='text-align: center;'>103034</td>
+<td style='text-align: center;'>11728</td>
+</tr>
+<tr>
+<td style='text-align: left;'>4</td>
+<td style='text-align: center;'>04</td>
+<td style='text-align: center;'>Campeche</td>
+<td style='text-align: center;'>Campeche</td>
+<td style='text-align: center;'>CAMP</td>
+<td style='text-align: center;'>Camp.</td>
+<td style='text-align: center;'>899931</td>
+<td style='text-align: center;'>441276</td>
+<td style='text-align: center;'>458655</td>
+<td style='text-align: center;'>3554</td>
+<td style='text-align: center;'>6833</td>
+<td style='text-align: center;'>400811</td>
+<td style='text-align: center;'>13140</td>
+</tr>
+<tr>
+<td style='text-align: left;'>5</td>
+<td style='text-align: center;'>05</td>
+<td style='text-align: center;'>Coahuila</td>
+<td style='text-align: center;'>Coahuila de Zaragoza</td>
+<td style='text-align: center;'>COAH</td>
+<td style='text-align: center;'>Coah.</td>
+<td style='text-align: center;'>2954915</td>
+<td style='text-align: center;'>1462612</td>
+<td style='text-align: center;'>1492303</td>
+<td style='text-align: center;'>2761</td>
+<td style='text-align: center;'>8137</td>
+<td style='text-align: center;'>204890</td>
+<td style='text-align: center;'>28588</td>
+</tr>
+<tr>
+<td style='border-bottom: 2px solid grey; text-align: left;'>6</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>06</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>Colima</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>Colima</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>COL</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>Col.</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>711235</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>350791</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>360444</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>762</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>3314</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>145297</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>12373</td>
+</tr>
+</tbody>
+</table>
 
-rt$text</code></pre>
+
+<!-- rnb-html-end -->
+ <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuTkFcbmBgYCJ9 --></p>
+<pre class="r"><code>NA</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaHRtbFRhYmxlKGhlYWQoZGZfbXhtdW5pY2lwaW8pKVxuYGBgIn0= -->
+<pre class="r"><code>htmlTable(head(df_mxmunicipio))</code></pre>
+<!-- rnb-source-end -->
+
+<!-- rnb-html-begin eyJtZXRhZGF0YSI6eyJjbGFzc2VzIjpbImh0bWwiLCJodG1sVGFibGUiLCJjaGFyYWN0ZXIiXSwic2l6aW5nUG9saWN5IjpbXX19 -->
+
+<table class='gmisc_table' style='border-collapse: collapse; margin-top: 1em; margin-bottom: 1em;' >
+<thead>
+<tr>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey;'> </th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>state_code</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>municipio_code</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>region</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>state_name</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>state_name_official</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>state_abbr</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>state_abbr_official</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>municipio_name</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>pop</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>pop_male</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>pop_female</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>afromexican</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>part_afromexican</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>indigenous</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>part_indigenous</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>metro_area</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>long</th>
+<th style='border-bottom: 1px solid grey; border-top: 2px solid grey; text-align: center;'>lat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style='text-align: left;'>1</td>
+<td style='text-align: center;'>01</td>
+<td style='text-align: center;'>001</td>
+<td style='text-align: center;'>01001</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>AGS</td>
+<td style='text-align: center;'>Ags.</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>877190</td>
+<td style='text-align: center;'>425731</td>
+<td style='text-align: center;'>451459</td>
+<td style='text-align: center;'>532</td>
+<td style='text-align: center;'>2791</td>
+<td style='text-align: center;'>104125</td>
+<td style='text-align: center;'>14209</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>-102.296047</td>
+<td style='text-align: center;'>21.879823</td>
+</tr>
+<tr>
+<td style='text-align: left;'>2</td>
+<td style='text-align: center;'>01</td>
+<td style='text-align: center;'>002</td>
+<td style='text-align: center;'>01002</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>AGS</td>
+<td style='text-align: center;'>Ags.</td>
+<td style='text-align: center;'>Asientos</td>
+<td style='text-align: center;'>46464</td>
+<td style='text-align: center;'>22745</td>
+<td style='text-align: center;'>23719</td>
+<td style='text-align: center;'>3</td>
+<td style='text-align: center;'>130</td>
+<td style='text-align: center;'>1691</td>
+<td style='text-align: center;'>92</td>
+<td style='text-align: center;'></td>
+<td style='text-align: center;'>-102.089275</td>
+<td style='text-align: center;'>22.238317</td>
+</tr>
+<tr>
+<td style='text-align: left;'>3</td>
+<td style='text-align: center;'>01</td>
+<td style='text-align: center;'>003</td>
+<td style='text-align: center;'>01003</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>AGS</td>
+<td style='text-align: center;'>Ags.</td>
+<td style='text-align: center;'>Calvillo</td>
+<td style='text-align: center;'>56048</td>
+<td style='text-align: center;'>27298</td>
+<td style='text-align: center;'>28750</td>
+<td style='text-align: center;'>10</td>
+<td style='text-align: center;'>167</td>
+<td style='text-align: center;'>7358</td>
+<td style='text-align: center;'>2223</td>
+<td style='text-align: center;'></td>
+<td style='text-align: center;'>-102.718751</td>
+<td style='text-align: center;'>21.846907</td>
+</tr>
+<tr>
+<td style='text-align: left;'>4</td>
+<td style='text-align: center;'>01</td>
+<td style='text-align: center;'>004</td>
+<td style='text-align: center;'>01004</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>AGS</td>
+<td style='text-align: center;'>Ags.</td>
+<td style='text-align: center;'>Cosío</td>
+<td style='text-align: center;'>15577</td>
+<td style='text-align: center;'>7552</td>
+<td style='text-align: center;'>8025</td>
+<td style='text-align: center;'>0</td>
+<td style='text-align: center;'>67</td>
+<td style='text-align: center;'>2213</td>
+<td style='text-align: center;'>191</td>
+<td style='text-align: center;'></td>
+<td style='text-align: center;'>-102.300044</td>
+<td style='text-align: center;'>22.366409</td>
+</tr>
+<tr>
+<td style='text-align: left;'>5</td>
+<td style='text-align: center;'>01</td>
+<td style='text-align: center;'>005</td>
+<td style='text-align: center;'>01005</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>AGS</td>
+<td style='text-align: center;'>Ags.</td>
+<td style='text-align: center;'>Jesús María</td>
+<td style='text-align: center;'>120405</td>
+<td style='text-align: center;'>60135</td>
+<td style='text-align: center;'>60270</td>
+<td style='text-align: center;'>32</td>
+<td style='text-align: center;'>219</td>
+<td style='text-align: center;'>8679</td>
+<td style='text-align: center;'>649</td>
+<td style='text-align: center;'>Aguascalientes</td>
+<td style='text-align: center;'>-102.343416</td>
+<td style='text-align: center;'>21.961273</td>
+</tr>
+<tr>
+<td style='border-bottom: 2px solid grey; text-align: left;'>6</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>01</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>006</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>01006</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>Aguascalientes</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>Aguascalientes</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>AGS</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>Ags.</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>Pabellón de Arteaga</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>46473</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>22490</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>23983</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>3</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>74</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>6232</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>251</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'></td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>-102.276542</td>
+<td style='border-bottom: 2px solid grey; text-align: center;'>22.149202</td>
+</tr>
+</tbody>
+</table>
+
+
+<!-- rnb-html-end -->
+
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Via <strong>regex</strong> :</p>
+<p>Por estados:</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGZfZXN0YWRvcyA9IGRmX214c3RhdGVcbmRmX21hdGNoX3Bvcl9lc3RhZG9zID0gZGZfY2xlYW4gJT4lIFxuICByZWdleF9pbm5lcl9qb2luKGRmX2VzdGFkb3MsIGJ5ID0gYyhjbGVhbl90ZXh0ID0gXCJzdGF0ZV9uYW1lXCIpKVxuXG5ucm93KGRmX21hdGNoX3Bvcl9lc3RhZG9zKVxuYGBgIn0= -->
+<pre class="r"><code>df_estados = df_mxstate
+df_match_por_estados = df_clean %&gt;% 
+  regex_inner_join(df_estados, by = c(clean_text = &quot;state_name&quot;))
+
+nrow(df_match_por_estados)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDM1XG4ifQ== -->
+<pre><code>[1] 35</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Por Municipios</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGZfbXVuaWNpcGlvcyA9IGRmX214bXVuaWNpcGlvXG5kZl9tYXRjaF9wb3JfbXVuaWNpcGlvID0gZGZfY2xlYW4gJT4lIFxuICByZWdleF9pbm5lcl9qb2luKGRmX211bmljaXBpb3MsIGJ5ID0gYyhjbGVhbl90ZXh0ID0gXCJtdW5pY2lwaW9fbmFtZVwiKSlcblxubnJvdyhkZl9tYXRjaF9wb3JfbXVuaWNpcGlvKVxuYGBgIn0= -->
+<pre class="r"><code>df_municipios = df_mxmunicipio
+df_match_por_municipio = df_clean %&gt;% 
+  regex_inner_join(df_municipios, by = c(clean_text = &quot;municipio_name&quot;))
+
+nrow(df_match_por_municipio)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDE1MFxuIn0= -->
+<pre><code>[1] 150</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Via <strong>Fuzzy Matching</strong> : # Pendiente</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
@@ -1811,7 +2232,7 @@ rt$text</code></pre>
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiVHdpdHRlciIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQoKCgpgYGB7ciBpbmNsdWRlPUZBTFNFfQpsaWJyYXJ5KHJ0d2VldCkKbGlicmFyeShteG1hcHMpCmxpYnJhcnkobWFwcykKbGlicmFyeShzdHJpbmdyKQpsaWJyYXJ5KHRpZHl2ZXJzZSkKYGBgCgoKYGBge3IgaW5jbHVkZT1GQUxTRX0KbWV4aWNvX2Nvb3JkIDwtIGxvb2t1cF9jb29yZHMoYWRkcmVzcyA9ICJtZXhpY28iKQpgYGAKCgpgYGB7cn0KcnQgPC0gc2VhcmNoX3R3ZWV0cygKICAiaG9zcGl0YWwgY2Fzb3MiLCBuID0gMTAwLCByZXRyeW9ucmF0ZWxpbWl0ID0gRixnZW9jb2RlID0gbWV4aWNvX2Nvb3JkLGluY2x1ZGVfcnRzID0gRgopCmBgYAoKCmBgYHtyfQoKYGBgCgpgYGB7cn0KYXMuaW50ZWdlcihzdHJfbWF0Y2gocnQkdGV4dCwgIig/aSkoXFxkKylcXHMqXFxiY2Fzbzo/IilbLDJdKQoKZGZfbXhtdW5pY2lwaW8kbXVuaWNpcGlvX25hbWUKCnJ0JHRleHQKYGBgCgoKYGBge3J9CgpgYGAKCgpgYGB7cn0KCmBgYAoKYGBge3J9CgpgYGAKCgpgYGB7cn0KCmBgYAoKCmBgYHtyfQoKYGBgCgpgYGB7cn0KCmBgYAoKCmBgYHtyfQoKYGBgCgoKYGBge3J9CgpgYGAKCg==</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiVHdpdHRlciIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQoKCgpgYGB7ciBpbmNsdWRlPUZBTFNFfQpsaWJyYXJ5KHJ0d2VldCkKbGlicmFyeShteG1hcHMpCmxpYnJhcnkobWFwcykKbGlicmFyeShzdHJpbmdyKQpsaWJyYXJ5KHRpZHl2ZXJzZSkKbGlicmFyeShnbHVlKQpsaWJyYXJ5KGZ1enp5am9pbikKYGBgCgoKCmBgYHtyfQpsaWJyYXJ5KGRvdGVudikKIyBMb2FkIGVudmlyb21lbnQgZmlsZQpsb2FkX2RvdF9lbnYoZmlsZSA9ICdlbnYuZW52JykKIyBTZXR0aW5nIGtleXMgdmFyaWFibGVzCgphcGlfa2V5ICA8LSBTeXMuZ2V0ZW52KCJhcGlfa2V5IiwgdW5zZXQ9IE5BKQphcGlfc2VjcmV0X2tleSAgPC0gU3lzLmdldGVudigiYXBpX3NlY3JldF9rZXkiLCB1bnNldD0gTkEpCmFjY2Vzc190b2tlbiAgPC0gU3lzLmdldGVudigiYWNjZXNzX3Rva2VuIiwgdW5zZXQ9IE5BKQphY2Nlc3NfdG9rZW5fc2VjcmV0ICA8LSBTeXMuZ2V0ZW52KCJhY2Nlc3NfdG9rZW5fc2VjcmV0IiwgdW5zZXQ9IE5BKQpgYGAKCgoKCgpgYGB7cn0KdG9rZW4gPC0gY3JlYXRlX3Rva2VuKAogIGFwcCA9ICJyc3RhdHNqb3VybmFsaXNtcmVzZWFyY2giLAogIGNvbnN1bWVyX2tleSA9IGFwaV9rZXksCiAgY29uc3VtZXJfc2VjcmV0ID0gYXBpX3NlY3JldF9rZXksCiAgYWNjZXNzX3Rva2VuID0gYWNjZXNzX3Rva2VuLAogIGFjY2Vzc19zZWNyZXQgPSBhY2Nlc3NfdG9rZW5fc2VjcmV0KQpgYGAKCmBgYHtyIGluY2x1ZGU9RkFMU0V9Cm1leGljb19jb29yZCA8LSBsb29rdXBfY29vcmRzKGFkZHJlc3MgPSAibWV4aWNvIikKYGBgCgoKT25seSBkb3dubG9hZCBpZiBuZWNlc3Nhcnk6CmBgYHtyfQpkZl90d2VldHNfc2VhcmNoIDwtIHNlYXJjaF90d2VldHMyKAogIHEgPSBjKCJob3NwaXRhbCBicm90ZSBsYW5nOmVzIiwgImhvc3BpdGFsIGJyb3RlcyBsYW5nOmVzIiwgImhvc3BpdGFsIGNhc29zIGxhbmc6ZXMiKSwKICBuID0gMTgwMDAsCiAgcmV0cnlvbnJhdGVsaW1pdCA9IEYsCiAgZ2VvY29kZSA9IG1leGljb19jb29yZCwKICBpbmNsdWRlX3J0cyA9IEYsCiAgdmVyYm9zZSA9IFQKKQpmaWxlID0gZ2x1ZSgiLi4vLi4vLi4vZGF0YS9kZl90d2VldHNfc2VhcmNoX3tmb3JtYXQoU3lzLnRpbWUoKSwgJyVZXyVtXyVkJyl9LnJkcyIpCgpzYXZlUkRTKGRmX3R3ZWV0c19zZWFyY2gsIGZpbGUpCmBgYAplbHNlIGxvYWQ6CgpgYGB7cn0KZmlsZSA9ICIuLi8uLi8uLi9kYXRhL2RmX3R3ZWV0c19zZWFyY2hfMjAyMF8wNF8xMS5yZHMiCmRmX3R3ZWV0c19zZWFyY2ggPSByZWFkUkRTKGZpbGUpCmBgYAoKClByb2Nlc3NpbmcKCkNvbHVtbmFzIG5lY2VzYXJpYXM6CmBgYHtyfQpjb2x1bW5hcyA9IGMoCiAgInN0YXR1c19pZCIsCiAgImNyZWF0ZWRfYXQiLAogICJzY3JlZW5fbmFtZSIsCiAgInRleHQiLAogICJmYXZvcml0ZV9jb3VudCIsCiAgInJldHdlZXRfY291bnQiLAogICJxdW90ZV9jb3VudCIsCiAgInJlcGx5X2NvdW50IiwKICAiaGFzaHRhZ3MiLAogICJzeW1ib2xzIiwKICAidXJsc19leHBhbmRlZF91cmwiLAogICJuYW1lIiwKICAidmVyaWZpZWQiCikKZGZfdHdlZXRzX3NlYXJjaF9yZWQgPSBkZl90d2VldHNfc2VhcmNoICU+JSBzZWxlY3QoISFlbnF1byhjb2x1bW5hcykpCmBgYAoKT2J0ZW5lbW9zIHBvc2libGVzIGNhc29zOgpgYGB7cn0KZGZfY2Fzb3MgPSBkZl90d2VldHNfc2VhcmNoX3JlZCAlPiUgCiAgbXV0YXRlKGNhc29zX21hdGNoID0gc3RyX2V4dHJhY3QodGV4dCwgIlxcYlswLTldezEsM30oLFswLTldezN9KSooXFxzKmNhc29zPylcXGIiKSkgJT4lIAogIGZpbHRlcighaXMubmEoY2Fzb3NfbWF0Y2gpKSAlPiUgCiAgbXV0YXRlKGNhc29zX251bSA9IHN0cl9leHRyYWN0KGNhc29zX21hdGNoLCAiXFxiWzAtOV17MSwzfSgsWzAtOV17M30pKiIpKSAlPiUgCiAgbXV0YXRlKCBudW1lcm9fY2Fzb3MgPSBhcy5udW1lcmljKHN0cl9yZXBsYWNlX2FsbChjYXNvc19udW0sICIsfFxcLiIsICIiKSkgKQpgYGAKCgpMaW1waWFtb3MgZWwgdGV4dG86CmBgYHtyfQpkZl9jbGVhbiA9IGRmX2Nhc29zICU+JSAKICBtdXRhdGUoY2xlYW5fdGV4dCA9IHBsYWluX3R3ZWV0cyh0ZXh0KSkgJT4lIAogIG11dGF0ZShjbGVhbl90ZXh0ID0gc3RyX3JlcGxhY2VfYWxsKGNsZWFuX3RleHQsICIjfEAiLCAiIikpCgpgYGAKCgpNYXRjaCBlbiBkb3MgZGlmZXJlbnRlcyBuaXZlbGVzIGVzdGFkbyB5IG11bmljaXBpbzoKYGBge3J9Cmh0bWxUYWJsZShoZWFkKGRmX214c3RhdGUpKQpgYGAKCgoKYGBge3J9Cmh0bWxUYWJsZShoZWFkKGRmX214bXVuaWNpcGlvKSkKYGBgCgpWaWEgX19yZWdleF9fIDoKClBvciBlc3RhZG9zOgpgYGB7cn0KZGZfZXN0YWRvcyA9IGRmX214c3RhdGUKZGZfbWF0Y2hfcG9yX2VzdGFkb3MgPSBkZl9jbGVhbiAlPiUgCiAgcmVnZXhfaW5uZXJfam9pbihkZl9lc3RhZG9zLCBieSA9IGMoY2xlYW5fdGV4dCA9ICJzdGF0ZV9uYW1lIikpCgpucm93KGRmX21hdGNoX3Bvcl9lc3RhZG9zKQpgYGAKCgpQb3IgTXVuaWNpcGlvcwpgYGB7cn0KZGZfbXVuaWNpcGlvcyA9IGRmX214bXVuaWNpcGlvCmRmX21hdGNoX3Bvcl9tdW5pY2lwaW8gPSBkZl9jbGVhbiAlPiUgCiAgcmVnZXhfaW5uZXJfam9pbihkZl9tdW5pY2lwaW9zLCBieSA9IGMoY2xlYW5fdGV4dCA9ICJtdW5pY2lwaW9fbmFtZSIpKQoKbnJvdyhkZl9tYXRjaF9wb3JfbXVuaWNpcGlvKQpgYGAKClZpYSBfX0Z1enp5IE1hdGNoaW5nX18gOgojIFBlbmRpZW50ZQpgYGB7cn0KCmBgYAoKCgoKCgpgYGB7cn0KCmBgYAoKCmBgYHtyfQoKYGBgCgoKYGBge3J9CgpgYGAKCgoKYGBge3J9CgpgYGAKCgoKYGBge3J9CgpgYGAKCgoKYGBge3J9CgpgYGAKCgoKYGBge3J9CgpgYGAKCg==</div>
 
 
 
