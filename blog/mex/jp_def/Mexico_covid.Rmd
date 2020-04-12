@@ -227,4 +227,16 @@ El modelo utiliza las muertes observadas de acuerdo a los datos oficiales del go
 
 ## Muertes observadas
 
-Día con día el gobierno federal nos infroma de el número de muertes observadas $D_t$ para los d+ias $t\in1,...,n$. Estas muertes diarias son modeladas utilizando el valor esperado de las muertes diarias, es decir, $d_t=\mathbf{E}[D_t]$. El modelo asume que $D_t$ tiene una distribución binomial negativa^[Asumo que utlizaron esta distribución para permitir sobredispersión] con los siguientes parámetros:
+Día con día el gobierno federal nos infroma de el número de muertes observadas $D_t$ para los d+ias $t\in1,...,n$. Estas muertes diarias son modeladas utilizando el valor esperado de las muertes diarias, es decir, $d_t=\mathbf{E}[D_t]$. El modelo asume que $D_t$ tiene una distribución binomial negativa^[Asumo que utlizaron esta distribución para permitir la posible sobredispersión.] con los siguientes parámetros:
+
+$$D_t\sim binomial \space neg \left(d_t,d_t+\frac{d_t^2}{\phi} \right)$$
+$$\phi \sim N^+(0,5)$$
+donde $\phi$ tiene una distribución normal truncada. El número esperado de muertes $d$ en un determinado día es una función de el número de infecciones $c$ que ocurrieron en días previos. Para poder unir las muertes con los casos infectados, se utilizó la tasa de mortalidad por infección ($ifr$,infection mortality rate en inglés) que toma en cuenta tanto a los detectados como los no detectados (recordemos que la tasa de letalidad solo contempla a los detectados mientras la tasa de mortalidad por infección contempla a todas las personas infectadas) y la utilizando el tiempo que pasa entre la infección y la muerte, la cual denotamos con $pi$. Si bien no hay un dato para México, se utilizó la tasa de mortalidad por infección reportado en el mismo estudio. Este valor correspondió a 0.9%.
+
+
+
+
+
+
+
+
