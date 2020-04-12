@@ -1,0 +1,78 @@
+---
+title: "Twitter"
+output: html_notebook
+---
+
+
+
+```{r include=FALSE}
+library(rtweet)
+library(mxmaps)
+library(maps)
+library(stringr)
+library(tidyverse)
+```
+
+
+```{r include=FALSE}
+mexico_coord <- lookup_coords(address = "mexico")
+```
+
+
+```{r}
+rt <- search_tweets(
+  "hospital casos", n = 100, retryonratelimit = F,geocode = mexico_coord,include_rts = F
+)
+```
+
+
+```{r}
+
+```
+
+```{r}
+as.integer(str_match(rt$text, "(?i)(\\d+)\\s*\\bcaso:?")[,2])
+
+df_mxmunicipio$municipio_name
+
+rt$text
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
