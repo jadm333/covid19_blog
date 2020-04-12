@@ -11,18 +11,150 @@ library(mxmaps)
 library(maps)
 library(stringr)
 library(tidyverse)
+library(glue)
+library(fuzzyjoin)
 ```
 
+
+
+```{r}
+library(dotenv)
+# Load enviroment file
+load_dot_env(file = 'env.env')
+# Setting keys variables
+
+api_key  <- Sys.getenv("api_key", unset= NA)
+api_secret_key  <- Sys.getenv("api_secret_key", unset= NA)
+access_token  <- Sys.getenv("access_token", unset= NA)
+access_token_secret  <- Sys.getenv("access_token_secret", unset= NA)
+```
+
+
+
+
+
+```{r}
+token <- create_token(
+  app = "rstatsjournalismresearch",
+  consumer_key = api_key,
+  consumer_secret = api_secret_key,
+  access_token = access_token,
+  access_secret = access_token_secret)
+```
 
 ```{r include=FALSE}
 mexico_coord <- lookup_coords(address = "mexico")
 ```
 
 
+Only download if necessary:
 ```{r}
-rt <- search_tweets(
-  "hospital casos", n = 100, retryonratelimit = F,geocode = mexico_coord,include_rts = F
+df_tweets_search <- search_tweets2(
+  q = c("hospital brote lang:es", "hospital brotes lang:es", "hospital casos lang:es"),
+  n = 18000,
+  retryonratelimit = F,
+  geocode = mexico_coord,
+  include_rts = F,
+  verbose = T
 )
+file = glue("../../../data/df_tweets_search_{format(Sys.time(), '%Y_%m_%d')}.rds")
+
+saveRDS(df_tweets_search, file)
+```
+else load:
+
+```{r}
+file = "../../../data/df_tweets_search_2020_04_11.rds"
+df_tweets_search = readRDS(file)
+```
+
+
+Processing
+
+Columnas necesarias:
+```{r}
+columnas = c(
+  "status_id",
+  "created_at",
+  "screen_name",
+  "text",
+  "favorite_count",
+  "retweet_count",
+  "quote_count",
+  "reply_count",
+  "hashtags",
+  "symbols",
+  "urls_expanded_url",
+  "name",
+  "verified"
+)
+df_tweets_search_red = df_tweets_search %>% select(!!enquo(columnas))
+```
+
+Obtenemos posibles casos:
+```{r}
+df_casos = df_tweets_search_red %>% 
+  mutate(casos_match = str_extract(text, "\\b[0-9]{1,3}(,[0-9]{3})*(\\s*casos?)\\b")) %>% 
+  filter(!is.na(casos_match)) %>% 
+  mutate(casos_num = str_extract(casos_match, "\\b[0-9]{1,3}(,[0-9]{3})*")) %>% 
+  mutate( numero_casos = as.numeric(str_replace_all(casos_num, ",|\\.", "")) )
+```
+
+
+Limpiamos el texto:
+```{r}
+df_clean = df_casos %>% 
+  mutate(clean_text = plain_tweets(text)) %>% 
+  mutate(clean_text = str_replace_all(clean_text, "#|@", ""))
+
+```
+
+
+Match en dos diferentes niveles estado y municipio:
+```{r}
+htmlTable(head(df_mxstate))
+```
+
+
+
+```{r}
+htmlTable(head(df_mxmunicipio))
+```
+
+Via __regex__ :
+
+Por estados:
+```{r}
+df_estados = df_mxstate
+df_match_por_estados = df_clean %>% 
+  regex_inner_join(df_estados, by = c(clean_text = "state_name"))
+
+nrow(df_match_por_estados)
+```
+
+
+Por Municipios
+```{r}
+df_municipios = df_mxmunicipio
+df_match_por_municipio = df_clean %>% 
+  regex_inner_join(df_municipios, by = c(clean_text = "municipio_name"))
+
+nrow(df_match_por_municipio)
+```
+
+Via __Fuzzy Matching__ :
+# Pendiente
+```{r}
+
+```
+
+
+
+
+
+
+```{r}
+
 ```
 
 
@@ -30,13 +162,11 @@ rt <- search_tweets(
 
 ```
 
+
 ```{r}
-as.integer(str_match(rt$text, "(?i)(\\d+)\\s*\\bcaso:?")[,2])
 
-df_mxmunicipio$municipio_name
-
-rt$text
 ```
+
 
 
 ```{r}
@@ -44,32 +174,17 @@ rt$text
 ```
 
 
-```{r}
-
-```
 
 ```{r}
 
 ```
 
 
-```{r}
-
-```
-
 
 ```{r}
 
 ```
 
-```{r}
-
-```
-
-
-```{r}
-
-```
 
 
 ```{r}
