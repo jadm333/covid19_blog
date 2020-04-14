@@ -24,7 +24,7 @@ data_interventions <- read.csv("interventions.csv",
 covariates <- data_interventions[1, c(1,2,3,4,5,6, 7, 8)]
   
 N <- length(dates[[1]])
-country <- countries[[1]]
+country <- "MEX"
     
 predicted_cases <- colQuantiles(prediction[,1:N,1], probs=.5)
 predicted_cases_li <- colQuantiles(prediction[,1:N,1], probs=.025)
@@ -48,7 +48,7 @@ rt_ui2 <- colQuantiles(out$Rt[,1:N,1],probs=.75)
 
 covariates_country <- covariates[which(covariates$ï..Country == country), 2:8]   
     
-  
+covariates_country$lockdown = NULL
 covariates_country$sport = NULL 
 covariates_country$travel_restrictions = NULL 
 covariates_country_long <- gather(covariates_country[], key = "key", 
@@ -119,9 +119,9 @@ un_dates <- unique(covariates_country_long$value)
              fill = "coral4", stat='identity', alpha=0.5) + 
     geom_ribbon(data = data_cases_95, 
                 aes(x = time, ymin = cases_min, ymax = cases_max, fill = key)) +
-    geom_line(aes(x=time,y=predicted_cases_c,color="Predicted"))+
+    geom_line(aes(x=time,y=predicted_cases_c,color="Predicción"))+
     xlab("") +
-    ylab("Número acumulado de casos confirmados (log2)") +
+    ylab("Número acumulado de casos confirmados") +
     scale_y_continuous(labels = scales::comma_format(accuracy = 1),n.breaks = 10)+
     scale_x_date(date_breaks = "3 days", labels = date_format("%e %b")) + 
     scale_fill_manual(name = "", labels = c("95% CrI"),
@@ -147,7 +147,7 @@ un_dates <- unique(covariates_country_long$value)
   p2 <-   ggplot(data_country, aes(x = time)) +
     geom_bar(data = data_country, aes(y = deaths_c, fill = "reported"),
              fill = "coral4", stat='identity', alpha=0.5) +
-    geom_line(aes(y=estimated_deaths_c,color="Predicted"))+
+    geom_line(aes(y=estimated_deaths_c,color="Predicción"))+
     geom_ribbon(
       data = data_deaths_95,
       aes(ymin = death_min, ymax = death_max, fill = key)) +
@@ -165,11 +165,10 @@ un_dates <- unique(covariates_country_long$value)
     ylab("Número acumulado de muertes")
   
   
-  plot_labels <- c("Complete lockdown", 
-                   "Public events banned",
-                   "School closure",
-                   "Self isolation",
-                   "Social distancing")
+  plot_labels <- c("Cancelación de eventos",
+                   "Cierre de escuelas",
+                   "Aislamiento después de presentar síntomas",
+                   "Distanciamiento Social")
   
   # Plotting interventions
   data_rt_95 <- data.frame(data_country$time, 
@@ -188,7 +187,7 @@ un_dates <- unique(covariates_country_long$value)
                                         group = key,
                                         fill = key)) +
     geom_hline(yintercept = 1, color = 'black', size = 0.1) + 
-    geom_step(aes(x=time,y=rt,linetype="Predicted"))+
+    geom_step(aes(x=time,y=rt,linetype="Predicción"))+
     scale_linetype_manual(name = "",
                        values ="solid")+
     geom_segment(data = covariates_country_long,
@@ -204,9 +203,9 @@ un_dates <- unique(covariates_country_long$value)
     ylab("Número efectivo de reproducción") +
     scale_fill_manual(name = "", labels = c("95% CrI"),
                       values = c(alpha("deepskyblue4", 0.55))) + 
-    scale_shape_manual(name = "Interventions", labels = plot_labels,
+    scale_shape_manual(name = "Intervenciones", labels = plot_labels,
                        values = c(21, 22, 23, 24, 25, 12)) + 
-    scale_colour_discrete(name = "Interventions", labels = plot_labels) + 
+    scale_colour_discrete(name = "Intervenciones", labels = plot_labels) + 
     scale_x_date(date_breaks = "3 days", labels = date_format("%e %b"), 
                  limits = c(data_country$time[1], 
                             data_country$time[length(data_country$time)])) + 

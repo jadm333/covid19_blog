@@ -7,51 +7,34 @@ library(tidyverse)
 library(countrycode)
 library(bayesplot)
 
-countries <- c("MEX")
-setwd("~/Covid/covid19_blog/blog/mex")
+setwd("~/Covid/covid19_blog/blog/mex/jp_def")
 
 
-## Reading all data
-confirmed_raw <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", col_types = cols())
-deaths_raw <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv", col_types = cols())
-
-confirmed_data<-confirmed_raw %>%
-  select(-Lat, -Long) %>%
-  rename(country = `Country/Region`,Province_Re=`Province/State`) %>%
-  mutate(iso3c = countrycode(country,
-                             origin = "country.name",
-                             destination = "iso3c")) %>%
-  select(-country) %>%
-  pivot_longer(
-    c(-Province_Re,-iso3c), 
-    names_to = "date_str", 
-    values_to = "confirmed"
-  ) %>%
-  mutate(date = mdy(date_str)) %>%
-  group_by(Province_Re)  %>% 
-  mutate(new_confirmed=c(0,diff(confirmed)))  %>% ungroup() %>%
-  select(iso3c,Province_Re, date,confirmed,new_confirmed) 
-
-deaths_data<-deaths_raw %>%
-  select(-Lat, -Long) %>%
-  rename(country = `Country/Region`,Province_Re=`Province/State`) %>%
-  mutate(iso3c = countrycode(country,
-                             origin = "country.name",
-                             destination = "iso3c")) %>%
-  select(-country) %>%
-  pivot_longer(
-    c(-Province_Re,-iso3c), 
-    names_to = "date_str", 
-    values_to = "deaths"
-  ) %>%
-  mutate(date = mdy(date_str)) %>%
-  group_by(Province_Re)  %>% 
+muertes_mx <- 
+  read_csv("https://raw.githubusercontent.com/mariorz/covid19-mx-time-series/master/data/covid19_deaths_mx.csv") %>% 
+  pivot_longer(-Estado, names_to = "date", values_to = "deaths") %>% 
+  mutate(date = dmy(date)) %>% rename(iso3c=Estado) %>% 
+  group_by(iso3c)  %>% 
   mutate(new_deaths=c(0,diff(deaths)))  %>% ungroup() %>%
-  select(iso3c,Province_Re, date,deaths,new_deaths) 
+  select(iso3c, date,deaths,new_deaths) 
 
 
-d <- confirmed_data %>%
-  full_join(deaths_data, by = c("iso3c","Province_Re", "date")) 
+confirmados_mx <- 
+  read_csv("https://raw.githubusercontent.com/mariorz/covid19-mx-time-series/master/data/covid19_confirmed_mx.csv") %>% 
+  pivot_longer(-Estado, names_to = "date", values_to = "confirmed") %>% 
+  mutate(date = dmy(date)) %>% rename(iso3c=Estado) %>% 
+  group_by(iso3c)  %>% 
+  mutate(new_confirmed=c(0,diff(confirmed)))  %>% ungroup() %>%
+  select(iso3c, date,confirmed,new_confirmed) 
+
+estados <- confirmados_mx %>%
+  full_join(muertes_mx, by = c("iso3c", "date"))
+
+d<-estados %>% 
+  group_by(date) %>%
+  summarise_at(vars(-iso3c),funs(sum)) %>% mutate(iso3c="MEX") %>% bind_rows(estados)
+
+
 
 
 cfr.by.country = read.csv("weighted_fatality.csv")
@@ -65,11 +48,11 @@ covariates<-rename(covariates,Country=ï..Country)
 p <- ncol(covariates) - 1
 forecast = 0
 
-N2 = 55 # Increase this for a further forecast
+N2 = 60 # Increase this for a further forecast
 
 dates = list()
 reported_cases = list()
-stan_data = list(M=length(countries),N=NULL,p=p,x1=poly(1:N2,2)[,1],x2=poly(1:N2,2)[,2],
+stan_data = list(M=1,N=NULL,p=p,x1=poly(1:N2,2)[,1],x2=poly(1:N2,2)[,2],
                  y=NULL,covariate1=NULL,covariate2=NULL,covariate3=NULL,covariate4=NULL,covariate5=NULL,covariate6=NULL,covariate7=NULL,deaths=NULL,f=NULL,
                  N0=6,cases=NULL,LENGTHSCALE=7,SI=serial.interval$fit[1:N2],
                  EpidemicStart = NULL)
@@ -83,7 +66,7 @@ for (i in 1:length(covariates1)) {
 }
 
   
-d1<-d %>% filter(d$iso3c=="MEX") %>% mutate(date=date-1) # correct dates
+d1<-d %>% filter(d$iso3c=="MEX") 
 
 d1$t = decimal_date(d1$date) 
 d1=d1[order(d1$t),]
@@ -168,7 +151,7 @@ if(length(stan_data$N) == 1) {
   
 
 stan_data$covariate2 = 0 * stan_data$covariate2 # remove travel bans
-stan_data$covariate4 = 0 * stan_data$covariate5 # remove sport
+stan_data$covariate4 = 0 * stan_data$covariate4 # remove sport
   
 
 stan_data$covariate2 = stan_data$covariate7 # self-isolating if ill
@@ -178,7 +161,8 @@ stan_data$covariate4 = 1*as.data.frame((stan_data$covariate1+
                                             stan_data$covariate5+
                                             stan_data$covariate6+
                                             stan_data$covariate7) >= 1)
-stan_data$covariate5 = stan_data$covariate5 # lockdown
+#stan_data$covariate5 = stan_data$covariate5 lockdown
+stan_data$covariate5 = 0 * stan_data$covariate5
 stan_data$covariate6 = stan_data$covariate6 # social distancing encouraged
 stan_data$covariate7 = 0 # models should only take 6 covariates
 

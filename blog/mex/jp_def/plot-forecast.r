@@ -15,50 +15,46 @@ library(cowplot)
 
 source("utils/geom-stepribbon.r")
 #---------------------------------------------------------------------------
-make_forecast_plot <- function(){
+
+load(paste0('results/',"base",'-',Sys.Date(),'-stanfit.Rdata'))
   
-  args <- commandArgs(trailingOnly = TRUE)
-  filename <- args[1]
-  
-  load(paste0("results/", filename))
-  
-  data_interventions <- read.csv("data/interventions.csv", 
+data_interventions <- read.csv("interventions.csv", 
                                  stringsAsFactors = FALSE)
   
-  for(i in 1:11){
-    N <- length(dates[[i]])
+
+    N <- length(dates[[1]])
     N2 <- N + 7
-    country <- countries[[i]]
+    country <- "MEX"
     
-    predicted_cases <- colMeans(prediction[,1:N,i])
-    predicted_cases_li <- colQuantiles(prediction[,1:N,i], probs=.025)
-    predicted_cases_ui <- colQuantiles(prediction[,1:N,i], probs=.975)
+    predicted_cases <- colMeans(prediction[,1:N,1])
+    predicted_cases_li <- colQuantiles(prediction[,1:N,1], probs=.025)
+    predicted_cases_ui <- colQuantiles(prediction[,1:N,1], probs=.975)
     
-    estimated_deaths <- colMeans(estimated.deaths[,1:N,i])
-    estimated_deaths_li <- colQuantiles(estimated.deaths[,1:N,i], probs=.025)
-    estimated_deaths_ui <- colQuantiles(estimated.deaths[,1:N,i], probs=.975)
+    estimated_deaths <- colMeans(estimated.deaths[,1:N,1])
+    estimated_deaths_li <- colQuantiles(estimated.deaths[,1:N,1], probs=.025)
+    estimated_deaths_ui <- colQuantiles(estimated.deaths[,1:N,1], probs=.975)
     
-    estimated_deaths_forecast <- colMeans(estimated.deaths[,1:N2,i])[N:N2]
-    estimated_deaths_li_forecast <- colQuantiles(estimated.deaths[,1:N2,i], probs=.025)[N:N2]
-    estimated_deaths_ui_forecast <- colQuantiles(estimated.deaths[,1:N2,i], probs=.975)[N:N2]
+    estimated_deaths_forecast <- colMeans(estimated.deaths[,1:N2,1])[N:N2]
+    estimated_deaths_li_forecast <- colQuantiles(estimated.deaths[,1:N2,1], probs=.025)[N:N2]
+    estimated_deaths_ui_forecast <- colQuantiles(estimated.deaths[,1:N2,1], probs=.975)[N:N2]
     
-    rt <- colMeans(out$Rt[,1:N,i])
-    rt_li <- colQuantiles(out$Rt[,1:N,i],probs=.025)
-    rt_ui <- colQuantiles(out$Rt[,1:N,i],probs=.975)
+    rt <- colMeans(out$Rt[,1:N,1])
+    rt_li <- colQuantiles(out$Rt[,1:N,1],probs=.025)
+    rt_ui <- colQuantiles(out$Rt[,1:N,1],probs=.975)
     
-    data_country <- data.frame("time" = as_date(as.character(dates[[i]])),
-                               "country" = rep(country, length(dates[[i]])),
+    data_country <- data.frame("time" = as_date(as.character(dates[[1]])),
+                               "country" = rep(country, length(dates[[1]])),
                                #"country_population" = rep(country_population, length(dates[[i]])),
-                               "reported_cases" = reported_cases[[i]], 
-                               "reported_cases_c" = cumsum(reported_cases[[i]]), 
+                               "reported_cases" = reported_cases[[1]], 
+                               "reported_cases_c" = cumsum(reported_cases[[1]]), 
                                "predicted_cases_c" = cumsum(predicted_cases),
                                "predicted_min_c" = cumsum(predicted_cases_li),
                                "predicted_max_c" = cumsum(predicted_cases_ui),
                                "predicted_cases" = predicted_cases,
                                "predicted_min" = predicted_cases_li,
                                "predicted_max" = predicted_cases_ui,
-                               "deaths" = deaths_by_country[[i]],
-                               "deaths_c" = cumsum(deaths_by_country[[i]]),
+                               "deaths" = deaths_by_country[[1]],
+                               "deaths_c" = cumsum(deaths_by_country[[1]]),
                                "estimated_deaths_c" =  cumsum(estimated_deaths),
                                "death_min_c" = cumsum(estimated_deaths_li),
                                "death_max_c"= cumsum(estimated_deaths_ui),
@@ -69,7 +65,7 @@ make_forecast_plot <- function(){
                                "rt_min" = rt_li,
                                "rt_max" = rt_ui)
     
-    times <- as_date(as.character(dates[[i]]))
+    times <- as_date(as.character(dates[[1]]))
     times_forecast <- times[length(times)] + 0:7
     data_country_forecast <- data.frame("time" = times_forecast,
                                         "country" = rep(country, 8),
@@ -77,15 +73,7 @@ make_forecast_plot <- function(){
                                         "death_min_forecast" = estimated_deaths_li_forecast,
                                         "death_max_forecast"= estimated_deaths_ui_forecast)
     
-    make_single_plot(data_country = data_country, 
-                     data_country_forecast = data_country_forecast,
-                     filename = filename,
-                     country = country)
-    
-  }
-}
 
-make_single_plot <- function(data_country, data_country_forecast, filename, country){
   
   data_deaths <- data_country %>%
     select(time, deaths, estimated_deaths) %>%

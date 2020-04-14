@@ -11,11 +11,11 @@ output:
   distill::distill_article:
     self_contained: no
     toc: yes
-    toc_depth: 2
+    toc_depth: 3
+lang: "es-419"
 ---
 
 ```{r setup, include=FALSE}
-
 knitr::opts_chunk$set(echo = FALSE,
                       tidy.opts=list(width.cutoff=60),
                       tidy=TRUE)
@@ -26,15 +26,26 @@ library(ggrepel)
 library(prismatic)
 library(ggsci)
 library(paletteer)
-library(incidence)
-library(EpiEstim)
-library(projections)
-library(epitrix)
 library(distcrete)
 library(magrittr)
+library(rstan)
+library(data.table)
+library(gdata)
+library(EnvStats)
+library(matrixStats)
+library(scales)
+library(gridExtra)
+library(ggpubr)
+library(bayesplot)
+library(cowplot)
 
 
-countries<-c("ITA","ESP","USA","MEX")
+percent <- function(x, digits = 2, format = "f", ...) {
+  paste0(formatC(100 * x, format = format, digits = digits, ...), "%")
+}
+
+pop<-127091642
+countries<-c("ITA","ESP","USA")
 
 confirmed_raw <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", col_types = cols())
 deaths_raw <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv", col_types = cols())
@@ -76,11 +87,233 @@ deaths_data<-deaths_raw %>%
   select(iso3c,Province_Re, date,deaths,new_deaths) 
 
 
-data_covid <- confirmed_data %>%
-  full_join(deaths_data, by = c("iso3c","Province_Re", "date")) %>% mutate(date=if_else(iso3c=="MEX",date-1,date))
+### mexico
 
-ontario<-data_covid %>% filter(Province_Re=="Ontario") %>%
-  mutate(iso3c="Ontario")
+muertes_mx <- 
+  read_csv("https://raw.githubusercontent.com/mariorz/covid19-mx-time-series/master/data/covid19_deaths_mx.csv") %>% 
+  pivot_longer(-Estado, names_to = "date", values_to = "deaths") %>% 
+  mutate(date = dmy(date)) %>% rename(iso3c=Estado) %>% 
+  group_by(iso3c)  %>% 
+  mutate(new_deaths=c(0,diff(deaths)))  %>% ungroup() %>%
+  select(iso3c, date,deaths,new_deaths) 
+
+
+confirmados_mx <- 
+  read_csv("https://raw.githubusercontent.com/mariorz/covid19-mx-time-series/master/data/covid19_confirmed_mx.csv") %>% 
+  pivot_longer(-Estado, names_to = "date", values_to = "confirmed") %>% 
+  mutate(date = dmy(date)) %>% rename(iso3c=Estado) %>% 
+  group_by(iso3c)  %>% 
+  mutate(new_confirmed=c(0,diff(confirmed)))  %>% ungroup() %>%
+  select(iso3c, date,confirmed,new_confirmed) 
+
+estados <- confirmados_mx %>%
+  full_join(muertes_mx, by = c("iso3c", "date"))
+
+mexico<-estados %>% 
+  group_by(date) %>%
+  summarise_at(vars(-iso3c),funs(sum)) %>% mutate(iso3c="MEX") %>% bind_rows(estados)
+
+data_covid <- confirmed_data %>%
+  full_join(deaths_data, by = c("iso3c","Province_Re", "date")) %>% bind_rows(mexico) 
+
+countries<-c("ITA","ESP","USA","MEX")
+
+source("utils/geom-stepribbon.r")
+#---------------------------------------------------------------------------
+load(paste0('results/',"base",'-',Sys.Date(),'-stanfit.Rdata'))
+  
+data_interventions <- read.csv("interventions.csv", 
+                                 stringsAsFactors = FALSE)
+covariates <- data_interventions[1, c(1,2,3,4,5,6, 7, 8)]
+  
+N <- length(dates[[1]])
+country <- "MEX"
+    
+predicted_cases <- colQuantiles(prediction[,1:N,1], probs=.5)
+predicted_cases_li <- colQuantiles(prediction[,1:N,1], probs=.025)
+predicted_cases_ui <- colQuantiles(prediction[,1:N,1], probs=.975)
+predicted_cases_li2 <- colQuantiles(prediction[,1:N,1], probs=.25)
+predicted_cases_ui2 <- colQuantiles(prediction[,1:N,1], probs=.75)
+    
+    
+estimated_deaths <- colQuantiles(estimated.deaths[,1:N,1], probs=.5)
+estimated_deaths_li <- colQuantiles(estimated.deaths[,1:N,1], probs=.025)
+estimated_deaths_ui <- colQuantiles(estimated.deaths[,1:N,1], probs=.975)
+estimated_deaths_li2 <- colQuantiles(estimated.deaths[,1:N,1], probs=.25)
+estimated_deaths_ui2 <- colQuantiles(estimated.deaths[,1:N,1], probs=.75)
+    
+rt <- colQuantiles(out$Rt[,1:N,1],probs=.5)
+rt_li <- colQuantiles(out$Rt[,1:N,1],probs=.025)
+rt_ui <- colQuantiles(out$Rt[,1:N,1],probs=.975)
+rt_li2 <- colQuantiles(out$Rt[,1:N,1],probs=.25)
+rt_ui2 <- colQuantiles(out$Rt[,1:N,1],probs=.75)
+    
+
+covariates_country <- covariates[which(covariates$ï..Country == country), 2:8]   
+    
+covariates_country$lockdown = NULL
+covariates_country$sport = NULL 
+covariates_country$travel_restrictions = NULL 
+covariates_country_long <- gather(covariates_country[], key = "key", 
+                                      value = "value")
+covariates_country_long$x <- rep(NULL, length(covariates_country_long$key))
+un_dates <- unique(covariates_country_long$value)
+    
+    for (k in 1:length(un_dates)){
+      idxs <- which(covariates_country_long$value == un_dates[k])
+      max_val <- round(max(rt_ui)) + 0.3
+      for (j in idxs){
+        covariates_country_long$x[j] <- max_val
+        max_val <- max_val - 0.3
+      }
+    }
+    
+    
+    covariates_country_long$value <- mdy(covariates_country_long$value) 
+    covariates_country_long$country <- rep(country, 
+                                           length(covariates_country_long$value))
+    
+    data_country <- data.frame("time" = as_date(as.character(dates[[1]])),
+                               "country" = rep(country, length(dates[[1]])),
+                               "reported_cases" = reported_cases[[1]], 
+                               "reported_cases_c" = cumsum(reported_cases[[1]]), 
+                               "predicted_cases_c" = cumsum(predicted_cases),
+                               "predicted_min_c" = cumsum(predicted_cases_li),
+                               "predicted_max_c" = cumsum(predicted_cases_ui),
+                               "predicted_min_c2" = cumsum(predicted_cases_li2),
+                               "predicted_max_c2" = cumsum(predicted_cases_ui2),
+                               "predicted_cases" = predicted_cases,
+                               "predicted_min" = predicted_cases_li,
+                               "predicted_max" = predicted_cases_ui,
+                               "predicted_min2" = predicted_cases_li2,
+                               "predicted_max2" = predicted_cases_ui2,
+                               "deaths" = deaths_by_country[[1]],
+                               "deaths_c" = cumsum(deaths_by_country[[1]]),
+                               "estimated_deaths_c" =  cumsum(estimated_deaths),
+                               "death_min_c" = cumsum(estimated_deaths_li),
+                               "death_max_c"= cumsum(estimated_deaths_ui),
+                               "death_min_c2" = cumsum(estimated_deaths_li2),
+                               "death_max_c2"= cumsum(estimated_deaths_ui2),
+                               "estimated_deaths" = estimated_deaths,
+                               "death_min" = estimated_deaths_li,
+                               "death_max"= estimated_deaths_ui,
+                               "death_min2" = estimated_deaths_li2,
+                               "death_max2"= estimated_deaths_ui2,
+                               "rt" = rt,
+                               "rt_min" = rt_li,
+                               "rt_max" = rt_ui,
+                               "rt_min2" = rt_li2,
+                               "rt_max2" = rt_ui2)
+
+
+  data_cases_95 <- data.frame(data_country$time, data_country$predicted_min_c, 
+                              data_country$predicted_max_c)
+  names(data_cases_95) <- c("time", "cases_min", "cases_max")
+  data_cases_95$key <- rep("nintyfive", length(data_cases_95$time))
+  data_cases_50 <- data.frame(data_country$time, data_country$predicted_min_c2, 
+                              data_country$predicted_max_c2)
+  names(data_cases_50) <- c("time", "cases_min", "cases_max")
+  data_cases_50$key <- rep("fifty", length(data_cases_50$time))
+  data_cases <- rbind(data_cases_95, data_cases_50)
+  levels(data_cases$key) <- c("ninetyfive", "fifty")
+  
+  p1 <- ggplot(data_country) +
+    geom_bar(data = data_country, aes(x = time, y = reported_cases_c), 
+             fill = "coral4", stat='identity', alpha=0.5) + 
+    geom_ribbon(data = data_cases_95, 
+                aes(x = time, ymin = cases_min, ymax = cases_max, fill = key)) +
+    geom_line(aes(x=time,y=predicted_cases_c,color="Predicción"))+
+    xlab("") +
+    ylab("Número acumulado de casos confirmados") +
+    scale_y_continuous(labels = scales::comma_format(accuracy = 1),n.breaks = 10)+
+    scale_x_date(date_breaks = "3 days", labels = date_format("%e %b")) + 
+    scale_fill_manual(name = "", labels = c("95% CrI"),
+                      values = c(alpha("deepskyblue4", 0.35))) + 
+    scale_color_manual(name = "",
+                      values ="black") + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),legend.position="bottom") + 
+    guides(fill=guide_legend(ncol=1))
+  
+  data_deaths_95 <- data.frame(data_country$time, data_country$death_min_c, 
+                               data_country$death_max_c)
+  names(data_deaths_95) <- c("time", "death_min", "death_max")
+  data_deaths_95$key <- rep("nintyfive", length(data_deaths_95$time))
+  data_deaths_50 <- data.frame(data_country$time, data_country$death_min_c2, 
+                               data_country$death_max_c2)
+  names(data_deaths_50) <- c("time", "death_min", "death_max")
+  data_deaths_50$key <- rep("fifty", length(data_deaths_50$time))
+  data_deaths <- rbind(data_deaths_95, data_deaths_50)
+  levels(data_deaths$key) <- c("ninetyfive", "fifty")
+  
+  
+  p2 <-   ggplot(data_country, aes(x = time)) +
+    geom_bar(data = data_country, aes(y = deaths_c, fill = "reported"),
+             fill = "coral4", stat='identity', alpha=0.5) +
+    geom_line(aes(y=estimated_deaths_c,color="Predicción"))+
+    geom_ribbon(
+      data = data_deaths_95,
+      aes(ymin = death_min, ymax = death_max, fill = key)) +
+    scale_x_date(date_breaks = "3 days", labels = date_format("%e %b")) +
+    scale_fill_manual(name = "", labels = c("95% CrI"),
+                      values = c(alpha("deepskyblue4", 0.35))) + 
+    scale_color_manual(name = "",
+                       values ="black")+
+    scale_y_continuous(labels = scales::comma_format(accuracy = 1),
+                       n.breaks = 10)+
+    xlab("") + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),legend.position="bottom") + 
+    guides(fill=guide_legend(ncol=1))+
+    ylab("Número acumulado de muertes")
+  
+  
+  plot_labels <- c("Cancelación de eventos",
+                   "Cierre de escuelas",
+                   "Aislamiento después de presentar síntomas",
+                   "Distanciamiento Social")
+  
+  # Plotting interventions
+  data_rt_95 <- data.frame(data_country$time, 
+                           data_country$rt_min, data_country$rt_max)
+  names(data_rt_95) <- c("time", "rt_min", "rt_max")
+  data_rt_95$key <- rep("nintyfive", length(data_rt_95$time))
+  data_rt_50 <- data.frame(data_country$time, data_country$rt_min2, 
+                           data_country$rt_max2)
+  names(data_rt_50) <- c("time", "rt_min", "rt_max")
+  data_rt_50$key <- rep("fifty", length(data_rt_50$time))
+  data_rt <- rbind(data_rt_95, data_rt_50)
+  levels(data_rt$key) <- c("ninetyfive", "fifth")
+  
+  p3 <- ggplot(data_country) +
+    geom_stepribbon(data = data_rt_95, aes(x = time, ymin = rt_min, ymax = rt_max, 
+                                        group = key,
+                                        fill = key)) +
+    geom_hline(yintercept = 1, color = 'black', size = 0.1) + 
+    geom_step(aes(x=time,y=rt,linetype="Predicción"))+
+    scale_linetype_manual(name = "",
+                       values ="solid")+
+    geom_segment(data = covariates_country_long,
+                 aes(x = value, y = 0, xend = value, yend = max(x)), 
+                 linetype = "dashed", colour = "black", alpha = 0.75) +
+    geom_point(data = covariates_country_long, aes(x = value, 
+                                                   y = x, 
+                                                   group = key, 
+                                                   shape = key, 
+                                                   col = key), size = 2) +
+    xlab("") +
+    scale_y_continuous(n.breaks = 10)+
+    ylab("Número efectivo de reproducción") +
+    scale_fill_manual(name = "", labels = c("95% CrI"),
+                      values = c(alpha("deepskyblue4", 0.55))) + 
+    scale_shape_manual(name = "Intervenciones", labels = plot_labels,
+                       values = c(21, 22, 23, 24, 25, 12)) + 
+    scale_colour_discrete(name = "Intervenciones", labels = plot_labels) + 
+    scale_x_date(date_breaks = "3 days", labels = date_format("%e %b"), 
+                 limits = c(data_country$time[1], 
+                            data_country$time[length(data_country$time)])) + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),legend.position="bottom")+
+    guides(shape=guide_legend(ncol=1,nrow=4))
+  
+
 ```
 
 # Introducción
@@ -121,9 +354,9 @@ Antes de presentar datos y gráficas me gustaría enfatizar en **2 aspectos impo
 ¿Qué sí podemos rescatar cuando comparamos casos confirmados entre diferentes países?. La siguiente gráfica muestra el número de casos confirmados acumulados con COVID-19 desde que se comfirmó el paciente número 100. Decidí transformar el eje de las $y$ al aplicarle el logaritmo base 2; esta transformación ayuda a una mejor interpretación de los datos ya que es más fácil para el lector ver cuanto tiempo se tarda un país en tener el doble de casos confirmados en un periodo determinado de tiempo. Asimismo al transformar los datos la serie de tiempo presenta un comportamiento más lneal.
 
 ```{r acum_casos, message=FALSE, warning=FALSE, tidy=TRUE,fig.width=10, fig.height=8}
- data_covid  %>% 
-   group_by(iso3c,date) %>%
-   summarise_at(vars(-Province_Re),funs(sum)) %>% filter(confirmed > 99) %>%
+ data_covid  %>% filter(iso3c %in% countries) %>%
+   group_by(iso3c,date) %>% summarise_at(vars(-Province_Re),funs(sum)) %>%
+  filter(confirmed > 99) %>%
    mutate(days_elapsed = date - min(date),
           end_label = ifelse(date == max(date),iso3c, NA)) %>%
    ggplot(mapping = aes(x = days_elapsed, y = confirmed,label=end_label,
@@ -164,7 +397,7 @@ México desde que llegó el caso número 100 ha tenido un incremento al doble de
 Dado que es difícil comparar casos confirmados por todo lo explicado en párrafos previos, pienso que es más fácil comparar el número de muertes^[Recordemos que a todos los graves sí se les realiza la prueba]. La siguiente gráfica nos ayuda a entender el comportamiento de número de muertes acumuladas en nuestro país desde que se presentó la quinta muerta.
 
 ```{r acum_muerte, message=FALSE, warning=FALSE, tidy=TRUE,fig.width=10, fig.height=8}
- data_covid  %>% 
+ data_covid %>% filter(iso3c %in% countries) %>% 
    group_by(iso3c,date) %>%
    summarise_at(vars(-Province_Re),funs(sum)) %>% filter(deaths > 4) %>%
    mutate(days_elapsed = date - min(date),
@@ -205,7 +438,7 @@ Dado que es difícil comparar casos confirmados por todo lo explicado en párraf
 Estos datos son los que personalmente me preocupan ya que México podría llegar a 4,000 muertos aproximadamente 20 días después del quinto deceso si las muertes incremental al doble cada 2 días (mismo caso que España). Volvemos al punto central que discutí en los datos de casos confirmados, **lo importante es ver cuánto cambia la pendiente a través del tiempo**. Hay que tener en cuenta que muchas de las muertes no serán diagnosticadas como muertes por COVID-19 (eso pasa en México y en otros países), por eso mientras el aumento sea constante no habría de preocuparse por esta sub-estimación.
 
 
-# Estimación del número de infectados y del impacto de Susana Distancia.
+## Estimación del número de infectados y del impacto de Susana Distancia.
 
 Debido a la naturaleza e importancia de la enfermedad, diferentes revistas indexadas en el mundo han acelerado su proceso de revisión para poder publicar diferentes artículos académicos referentes al SARS-COV 19. A mí siempre me han llamado la atención aquellos artículos que describen modelos de predicción. 
 
@@ -218,24 +451,116 @@ Estas limitaciones no afectarán ningún modelo o inferencia que se quiera reali
 
 ¿De qué manera se puede estimar el número de infectados y el impacto de las medidas realizadas por el gobierno federal para incentivar el distanciamiento social? Utizando la historia natural de la enfermedad. El Imperial College de Reino Unido publicó el 30 de marzo un modelo [modelo de predicción](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-13-europe-npi-impact/) de muertes, infectados y efectos de diferentes medidas para "aplanar la curva". Con el fin de tener una mejor imagen de lo que pasa con COVID-19, el anterior modelo fue adaptado utilizando los datos oficiales reportados en nuestro país. La Figura 1 muestra el modelo de predicción.
 
-```{r pressure, echo=FALSE, fig.cap="Forecast algorithm",fig.align="center"}
+```{r pressure, echo=FALSE, fig.cap="Modelo de predicción",fig.align="center"}
 knitr::include_graphics("model.png")
 ```
 
 El modelo utiliza las muertes observadas de acuerdo a los datos oficiales del gobierno de México.La Figura 1 muestra el nivel jerárquico (de abajo hacia arriba) que nos permite relacionar el impacto de diferentes intervenciones (i.e. cierre de escuelas,etc.) y las muertes observadas. Dada la relación que existe entre los diferentes parámetros a estimar, el modelo realiza la inferencia utilizando un enfoque Bayesiano mediante `stan`, un lenguaje de programación específco para inferencia Bayesiana. La relación entre los parámetros se explica a grandes razgos a continuación utilizando la misma notación que el modelo original.
 
-## Muertes observadas
+### Muertes observadas
 
 Día con día el gobierno federal nos infroma de el número de muertes observadas $D_t$ para los d+ias $t\in1,...,n$. Estas muertes diarias son modeladas utilizando el valor esperado de las muertes diarias, es decir, $d_t=\mathbf{E}[D_t]$. El modelo asume que $D_t$ tiene una distribución binomial negativa^[Asumo que utlizaron esta distribución para permitir la posible sobredispersión.] con los siguientes parámetros:
 
 $$D_t\sim binomial \space neg \left(d_t,d_t+\frac{d_t^2}{\phi} \right)$$
 $$\phi \sim N^+(0,5)$$
-donde $\phi$ tiene una distribución normal truncada. El número esperado de muertes $d$ en un determinado día es una función de el número de infecciones $c$ que ocurrieron en días previos. Para poder unir las muertes con los casos infectados, se utilizó la tasa de mortalidad por infección ($ifr$,infection mortality rate en inglés) que toma en cuenta tanto a los detectados como los no detectados (recordemos que la tasa de letalidad solo contempla a los detectados mientras la tasa de mortalidad por infección contempla a todas las personas infectadas) y la utilizando el tiempo que pasa entre la infección y la muerte, la cual denotamos con $pi$. Si bien no hay un dato para México, se utilizó la tasa de mortalidad por infección reportado en el mismo estudio. Este valor correspondió a 0.9%.
+donde $\phi$ tiene una distribución normal truncada. El número esperado de muertes $d$ en un determinado día es una función del número de infecciones $c$ que ocurrieron en días previos. Para poder unir las muertes con los casos infectados, se utilizó la tasa de mortalidad por infección ($ifr$, infection mortality rate en inglés) que toma en cuenta tanto a los detectados como los no detectados^[recordemos que la tasa de letalidad solo contempla a los detectados mientras la tasa de mortalidad por infección contempla a todas las personas infectadas] y el tiempo que pasa entre la infección y la muerte, la cual denotamos con $\pi$. Si bien no hay un dato para México hasta el momento para $ifr$, se utilizó la tasa de mortalidad por infección reportado en el mismo estudio. Este valor correspondió a 0.9%.
+
+El modelo asume (basado en [evidencia](https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(20)30243-7/fulltext) previa) que $\pi$ es una suma de dos tiempos independientes: el tiempo de incubación(tiempo entre infección y sintomas) y el tiempo entre síntomas y muerte. Claramente estos tiempos son aleatorios y por lo tanto se les asigna una distribución de probabilidad (Gamma^[Parametrizada con la media de la distribución y su coeficiente de variación]). Por lo tanto $\pi$ está dado por:
+
+$$\phi\sim ifr((Gamma(5.1,0.86)+Gamma(18.8,0.45))$$
+Ahora que ya sabemos que $\pi$ representa la distribución entre el tiempo de infección y muerte ajustada por la tasa de mortalidad por infección, se puede relacionar el número esperado de muertes en un determinado día $d_t$ con $pi$ de la siguiente manera:
+
+$$d_t=\sum_{\tau=0}^{t-1} c_t\pi_{t-\tau}$$
+donde $c_\tau$ es el número de nuevas infecciones en el día $\tau$ y donde $\pi$ es discretizado. La ecuación anterior nos dice que el número de muertes esperadas al día $t$ puede ser expresado como la ponderación entre el número de infecciones en días pasados y la probabilidad de morir.
+
+### Infecciones en el modelo
+
+Hasta ahora he resumido la relación que puede existir entre el número de muertes y el número de infecciones al día $t$. Para modelar el número de infecciones en el tiempo es necesario especificar el tiempo que pasa entre el inicio de síntomas de una persona y el inicio de síntomas de otra persona infectada por la primera (en inglés se conoce como **serial interval**). De acuerdo a la literatura el promedio de este tiempo ronda entre los 4 días y 8 días, por lo que el modelo asume que éste tiene una distribución gamma^[Misma parametrización] con los siguientes parámetros:
+
+$$ g(\tau) \sim Gamma(6.5,0.62)$$
+El número de infecciones $c_t$ al día $t$ está dada por la siguiente [función](https://www.jstor.org/stable/1969779?seq=1):
+
+$$c_t=R_t\sum_{\tau=0}^{t-1} c_\tau g_{t-\tau}$$
+donge $g$ también es discretizada. Lo anterior implica que las infecciones al dia de hoy dependen de las infecciones en días pasados, ponderadas por la distribución $g$. Esta ponderación es ajustada por el numero efectivo de reproducción
+^[Este es el número de casos, en promedio, que van a ser causados por una persona infectada durante el periodo de contagio] $R_t$. Éste número cambia con respecto al tiempo debido a que la implimentación de diferentes medidas de mitigación en teoría hará que éste disminuya y por lo tanto haya menos contagios.
+
+La idea es empezar con un número de reproduciión basal $R_0$^[Para los que vieron Contagio seguro recordarán que esta expresión es conocida como el número básico de reproducción (R-naught en inglés)] y que este se irá modificando en el tiempo debido a la implementación de diferentes intervenciones como Susana Distancia en nuestro país.
+
+El modelo utiliza las siguientes intervenciones:
+
+1. Aislación voluntaria al ser detectado con SARS-COV2 - Se asume que esta medida fue implementada unos días después del primer caso confirmado con COVID-19 (28 de febrero). Decidimos utilizar el 3 de marzo como el tiempo en que se implementa la medida para dar tiempo a que ésta medida fuera difundida en todo el país cuando se presentaron los primeros casos.
+
+2. Cancelación de eventos públicos - Se asume como el día (Marzo 17) en que el gobierno de la CDMX decidió cancelar todos los eventos públicos en la [ciudad](https://www.eluniversal.com.mx/metropoli/cdmx/coronavirus-gobierno-de-cdmx-suspende-eventos-masivos-por-covid-19).
+
+3. Cierre de escuelas - Se asume como el día (Marzo 21) en que la UNAM suspendió clases [clases](https://heraldodemexico.com.mx/pais/unam-suspende-clases-por-coronavirus-covid-19/). 
+
+4. Exhortación al distanciamiento social - Inicio de Susana [Distancia](https://www.unotv.com/noticias/portal/nacional/detalle/coronavirus-en-mexico-anuncian-jornada-nacional-de-sana-distancia-491479/) (Marzo 23).
+
+Para falicitar la estimación de $R_t$, se utiliza una función por partes que modifique $R_t$a partir de un valor inical $R_0$ y ademas que el efecto de cada intervención  es multiplicativa. Por lo tanto el número efectivo de reproducción $R_t$  es una función de la implementación de cada intervención al día $t$:
+
+$$R_t=R_0exp(-\sum_{k=1}^{4}\alpha_{k}I_{k,t})$$
+
+donde I es una variable indicadora donde toma el valor de 1 y la intervención $k$ es implementada $k=1,...,4$ y 0 si no. Asimsmo:
+
+$$\alpha_{k}\sim Gamma(.5,1)$$
+La distribución de $R_0$ fue asumida con base en la evidencia [previa](https://www.ncbi.nlm.nih.gov/pubmed/32097725):
+
+$$R_0\sim Normal(2.4,|\kappa|),\space \kappa\sim Normal(0,0.5)$$
+Finalmente el modelo asume que las nuevas infecciones ocurren 30 días antes de que el país haya acumulado 10 muertes observadas.
+
+## Resultados
+
+El modelo estima que para `r format(max(data_covid$date), "%b %e")`, el número acumulado de infectados por SARS-COV2 en nuestro país es de `r formatC(tail(data_country[,"predicted_cases_c"],1), format="f", big.mark=",", digits=0)` (95% CrI: `r paste(formatC(tail(data_country[,"predicted_min_c"],1), format="f", big.mark=",", digits=0),"-",formatC(tail(data_country[,"predicted_max_c"],1), format="f", big.mark=",", digits=0))`) (ver Figura XX). Lo anterior representa al `r percent(tail(data_country[,"predicted_cases_c"],1)/pop)` (95% CrI: `r paste(percent(tail(data_country[,"predicted_min_c"],1)/pop),"-",percent(tail(data_country[,"predicted_max_c"],1)/pop))`).
+
+Al inicio de la epidemia en México, el número efectivo de reproducción $R_t$ era de `r formatC(head(data_country[,"rt"],1), format="f", big.mark=",", digits=1)` (95% CrI: `r paste(formatC(head(data_country[,"rt_min"],1), format="f", big.mark=",", digits=1),"-",formatC(head(data_country[,"rt_max"],1), format="f", big.mark=",", digits=1))`). Después de que el gobierno implementó "Susana Distancia" el 23 de Marzo, éste descendió a `r formatC(tail(data_country[,"rt"],1), format="f", big.mark=",", digits=1)` (95% CrI: `r paste(formatC(tail(data_country[,"rt_min"],1), format="f", big.mark=",", digits=1),"-",formatC(tail(data_country[,"rt_max"],1), format="f", big.mark=",", digits=1))`)
+
+```{r message=FALSE, warning=FALSE, tidy=TRUE,fig.width=10, fig.height=8,fig.cap="Número acumulado de confirmados por COVID-19, observados y predichos"}
+p1+labs(caption = "Juan Pablo Díaz @juandiazmart / Data: https://github.com/mariorz.",
+        subtitle = paste("Datos hasta", format(max(data_covid$date), "%b %e, %Y"))) + 
+   theme(plot.title = element_text(size = rel(2), face = "bold"),
+         plot.subtitle = element_text(size = rel(1.5)),
+         axis.text.y = element_text(size = rel(2)),
+         axis.title.x = element_text(size = rel(1.5)),
+         axis.title.y = element_text(size = rel(1.5)),
+         axis.text.x = element_text(size = rel(2)),
+         legend.text = element_text(size = rel(1)),
+         panel.grid.major = element_line(colour = "grey90", size = .1),
+         panel.background = element_blank(),
+         axis.line = element_line(colour = "grey50", size = .9))
+```
 
 
+```{r message=FALSE, warning=FALSE, tidy=TRUE,fig.width=10, fig.height=8,fig.cap=paste("Efecto de las intervenciones en",expression(R[t]))}
+p3+labs(caption = "Juan Pablo Díaz @juandiazmart / Data: https://github.com/mariorz.",
+        subtitle = paste("Datos hasta", format(max(data_covid$date), "%b %e, %Y"))) + 
+   theme(plot.title = element_text(size = rel(2), face = "bold"),
+         plot.subtitle = element_text(size = rel(1.5)),
+         axis.text.y = element_text(size = rel(2)),
+         axis.title.x = element_text(size = rel(1.5)),
+         axis.title.y = element_text(size = rel(1.5)),
+         axis.text.x = element_text(size = rel(2)),
+         legend.text = element_text(size = rel(1)),
+         panel.grid.major = element_line(colour = "grey90", size = .1),
+         panel.background = element_blank(),
+         axis.line = element_line(colour = "grey50", size = .9))
+```
 
+Una de las ventajas de este modelo es que nos permite hacer predicciones del número acumulado de muertes, utilizando $R_t$ estimado en `r format(max(data_covid$date), "%b %e")` y su contrafactual^[Lo que pudo haber ocurrido] ($R_t$ al inicio de la epidemia en nuestro país);estas predicciones se muestran en la Figura XX.
 
-
+```{r message=FALSE, warning=FALSE, tidy=TRUE,fig.width=10, fig.height=8,fig.cap= "Número acumulado de muertes por COVID-19, observados y predichos"}
+p2+labs(caption = "Juan Pablo Díaz @juandiazmart / Data: https://github.com/mariorz.",
+        subtitle = paste("Datos hasta", format(max(data_covid$date), "%b %e, %Y"))) + 
+   theme(plot.title = element_text(size = rel(2), face = "bold"),
+         plot.subtitle = element_text(size = rel(1.5)),
+         axis.text.y = element_text(size = rel(2)),
+         axis.title.x = element_text(size = rel(1.5)),
+         axis.title.y = element_text(size = rel(1.5)),
+         axis.text.x = element_text(size = rel(2)),
+         legend.text = element_text(size = rel(1)),
+         panel.grid.major = element_line(colour = "grey90", size = .1),
+         panel.background = element_blank(),
+         axis.line = element_line(colour = "grey50", size = .9))
+```
 
 
 
