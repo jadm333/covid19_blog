@@ -22,21 +22,26 @@ data_interventions <- read.csv("interventions.csv",
                                  stringsAsFactors = FALSE)
   
 
+
     N <- length(dates[[1]])
     N2 <- N + 7
     country <- "MEX"
     
-    predicted_cases <- colMeans(prediction[,1:N,1])
+    predicted_cases <- colQuantiles(prediction[,1:N,1], probs=.5)
     predicted_cases_li <- colQuantiles(prediction[,1:N,1], probs=.025)
     predicted_cases_ui <- colQuantiles(prediction[,1:N,1], probs=.975)
     
-    estimated_deaths <- colMeans(estimated.deaths[,1:N,1])
+    estimated_deaths <- colQuantiles(estimated.deaths[,1:N,1], probs=.5)
     estimated_deaths_li <- colQuantiles(estimated.deaths[,1:N,1], probs=.025)
     estimated_deaths_ui <- colQuantiles(estimated.deaths[,1:N,1], probs=.975)
     
-    estimated_deaths_forecast <- colMeans(estimated.deaths[,1:N2,1])[N:N2]
-    estimated_deaths_li_forecast <- colQuantiles(estimated.deaths[,1:N2,1], probs=.025)[N:N2]
-    estimated_deaths_ui_forecast <- colQuantiles(estimated.deaths[,1:N2,1], probs=.975)[N:N2]
+    estimated_deaths_forecast <- cumsum(colQuantiles(estimated.deaths[,1:N2,1], probs=.5)[N:N2])
+    estimated_deaths_li_forecast <- cumsum(colQuantiles(estimated.deaths[,1:N2,1], probs=.025)[N:N2])
+    estimated_deaths_ui_forecast <- cumsum(colQuantiles(estimated.deaths[,1:N2,1], probs=.975)[N:N2])
+    
+    estimated_deaths_cf <- cumsum(colQuantiles(estimated.deaths.cf[,1:N2,1], probs=.5))
+    estimated_deaths_li_cf <- cumsum(colQuantiles(estimated.deaths.cf[,1:N2,1], probs=.025))
+    estimated_deaths_ui_cf <- cumsum(colQuantiles(estimated.deaths.cf[,1:N2,1], probs=.975))
     
     rt <- colMeans(out$Rt[,1:N,1])
     rt_li <- colQuantiles(out$Rt[,1:N,1],probs=.025)
@@ -69,9 +74,17 @@ data_interventions <- read.csv("interventions.csv",
     times_forecast <- times[length(times)] + 0:7
     data_country_forecast <- data.frame("time" = times_forecast,
                                         "country" = rep(country, 8),
-                                        "estimated_deaths_forecast" = estimated_deaths_forecast,
-                                        "death_min_forecast" = estimated_deaths_li_forecast,
-                                        "death_max_forecast"= estimated_deaths_ui_forecast)
+                                        "estimated_deaths_forecast" = estimated_deaths_forecast+head(tail(data_country$estimated_deaths_c, n=2), n=1),
+                                        "death_min_forecast" = estimated_deaths_li_forecast+head(tail(data_country$death_min_c, n=2), n=1),
+                                        "death_max_forecast"= estimated_deaths_ui_forecast+head(tail(data_country$death_max_c, n=2), n=1))
+    
+   
+    times_cf <- times[1] + 0:(N2-1)
+    data_country_cf <- data.frame("time" = times_cf,
+                                        "country" = rep(country, (N2)),
+                                        "estimated_deaths_cf" = estimated_deaths_cf,
+                                        "death_min_cf" = estimated_deaths_li_cf,
+                                        "death_max_cf"= estimated_deaths_ui_cf)
     
 
   
@@ -89,22 +102,30 @@ data_interventions <- read.csv("interventions.csv",
   data_deaths_all <- rbind(data_deaths, data_deaths_forecast)
   
   p <- ggplot(data_country) +
-    geom_bar(data = data_country, aes(x = time, y = deaths), 
+    geom_bar(data = data_country, aes(x = time, y = deaths_c), 
              fill = "coral4", stat='identity', alpha=0.5) + 
-    geom_line(data = data_country, aes(x = time, y = estimated_deaths), 
+    geom_line(data = data_country, aes(x = time, y = estimated_deaths_c), 
               col = "deepskyblue4") + 
     geom_line(data = data_country_forecast, 
               aes(x = time, y = estimated_deaths_forecast), 
-              col = "black", alpha = 0.5) + 
+              col = "deepskyblue4", alpha = 0.5) + 
+    geom_line(data = data_country_cf, 
+              aes(x = time, y = estimated_deaths_cf), 
+              col = "red", alpha = 0.5)+
     geom_ribbon(data = data_country, aes(x = time, 
-                                         ymin = death_min, 
-                                         ymax = death_max),
+                                         ymin = death_min_c, 
+                                         ymax = death_max_c),
                 fill="deepskyblue4", alpha=0.3) +
     geom_ribbon(data = data_country_forecast, 
                 aes(x = time, 
                     ymin = death_min_forecast, 
                     ymax = death_max_forecast),
-                fill = "black", alpha=0.35) +
+                fill = "deepskyblue4", alpha=0.35) +
+    geom_ribbon(data = data_country_cf, 
+                aes(x = time, 
+                    ymin = death_min_cf, 
+                    ymax = death_max_cf),
+                fill = "red", alpha=0.35)+
     geom_vline(xintercept = data_deaths$time[length(data_deaths$time)], 
                col = "black", linetype = "dashed", alpha = 0.5) + 
     #scale_fill_manual(name = "", 
@@ -125,7 +146,7 @@ data_interventions <- read.csv("interventions.csv",
   
   ggsave(file= paste0("figures/", country, "_forecast_", filename, ".pdf"), 
          p, width = 10)
-}
+
 #-----------------------------------------------------------------------------------------------
 make_forecast_plot()
 

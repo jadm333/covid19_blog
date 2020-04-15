@@ -38,18 +38,17 @@ library(gridExtra)
 library(ggpubr)
 library(bayesplot)
 library(cowplot)
+library(plotly)
 
+#source('Mexico_muerte.R', encoding = 'UTF-8')
 
 percent <- function(x, digits = 2, format = "f", ...) {
   paste0(formatC(100 * x, format = format, digits = digits, ...), "%")
 }
-
 pop<-127091642
 countries<-c("ITA","ESP","USA")
-
 confirmed_raw <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv", col_types = cols())
 deaths_raw <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv", col_types = cols())
-
 confirmed_data<-confirmed_raw %>%
   select(-Lat, -Long) %>%
   rename(country = `Country/Region`,Province_Re=`Province/State`) %>%
@@ -67,7 +66,6 @@ confirmed_data<-confirmed_raw %>%
   group_by(Province_Re)  %>% 
   mutate(new_confirmed=c(0,diff(confirmed)))  %>% ungroup() %>%
   select(iso3c,Province_Re, date,confirmed,new_confirmed) 
-
 deaths_data<-deaths_raw %>%
   select(-Lat, -Long) %>%
   rename(country = `Country/Region`,Province_Re=`Province/State`) %>%
@@ -85,10 +83,7 @@ deaths_data<-deaths_raw %>%
   group_by(Province_Re)  %>% 
   mutate(new_deaths=c(0,diff(deaths)))  %>% ungroup() %>%
   select(iso3c,Province_Re, date,deaths,new_deaths) 
-
-
 ### mexico
-
 muertes_mx <- 
   read_csv("https://raw.githubusercontent.com/mariorz/covid19-mx-time-series/master/data/covid19_deaths_mx.csv") %>% 
   pivot_longer(-Estado, names_to = "date", values_to = "deaths") %>% 
@@ -96,8 +91,6 @@ muertes_mx <-
   group_by(iso3c)  %>% 
   mutate(new_deaths=c(0,diff(deaths)))  %>% ungroup() %>%
   select(iso3c, date,deaths,new_deaths) 
-
-
 confirmados_mx <- 
   read_csv("https://raw.githubusercontent.com/mariorz/covid19-mx-time-series/master/data/covid19_confirmed_mx.csv") %>% 
   pivot_longer(-Estado, names_to = "date", values_to = "confirmed") %>% 
@@ -105,19 +98,14 @@ confirmados_mx <-
   group_by(iso3c)  %>% 
   mutate(new_confirmed=c(0,diff(confirmed)))  %>% ungroup() %>%
   select(iso3c, date,confirmed,new_confirmed) 
-
 estados <- confirmados_mx %>%
   full_join(muertes_mx, by = c("iso3c", "date"))
-
 mexico<-estados %>% 
   group_by(date) %>%
   summarise_at(vars(-iso3c),funs(sum)) %>% mutate(iso3c="MEX") %>% bind_rows(estados)
-
 data_covid <- confirmed_data %>%
   full_join(deaths_data, by = c("iso3c","Province_Re", "date")) %>% bind_rows(mexico) 
-
 countries<-c("ITA","ESP","USA","MEX")
-
 source("utils/geom-stepribbon.r")
 #---------------------------------------------------------------------------
 load(paste0('results/',"base",'-',Sys.Date(),'-stanfit.Rdata'))
@@ -127,7 +115,17 @@ data_interventions <- read.csv("interventions.csv",
 covariates <- data_interventions[1, c(1,2,3,4,5,6, 7, 8)]
   
 N <- length(dates[[1]])
+N2 <- N + 7
 country <- "MEX"
+
+
+estimated_deaths_forecast <- cumsum(colQuantiles(estimated.deaths[,1:N2,1], probs=.5)[N:N2])
+estimated_deaths_li_forecast <- cumsum(colQuantiles(estimated.deaths[,1:N2,1], probs=.025)[N:N2])
+estimated_deaths_ui_forecast <- cumsum(colQuantiles(estimated.deaths[,1:N2,1], probs=.975)[N:N2])
+    
+estimated_deaths_cf <- cumsum(colQuantiles(estimated.deaths.cf[,1:N2,1], probs=.5))
+estimated_deaths_li_cf <- cumsum(colQuantiles(estimated.deaths.cf[,1:N2,1], probs=.025))
+estimated_deaths_ui_cf <- cumsum(colQuantiles(estimated.deaths.cf[,1:N2,1], probs=.975))
     
 predicted_cases <- colQuantiles(prediction[,1:N,1], probs=.5)
 predicted_cases_li <- colQuantiles(prediction[,1:N,1], probs=.025)
@@ -148,7 +146,6 @@ rt_ui <- colQuantiles(out$Rt[,1:N,1],probs=.975)
 rt_li2 <- colQuantiles(out$Rt[,1:N,1],probs=.25)
 rt_ui2 <- colQuantiles(out$Rt[,1:N,1],probs=.75)
     
-
 covariates_country <- covariates[which(covariates$ï..Country == country), 2:8]   
     
 covariates_country$lockdown = NULL
@@ -204,8 +201,6 @@ un_dates <- unique(covariates_country_long$value)
                                "rt_max" = rt_ui,
                                "rt_min2" = rt_li2,
                                "rt_max2" = rt_ui2)
-
-
   data_cases_95 <- data.frame(data_country$time, data_country$predicted_min_c, 
                               data_country$predicted_max_c)
   names(data_cases_95) <- c("time", "cases_min", "cases_max")
@@ -246,27 +241,76 @@ un_dates <- unique(covariates_country_long$value)
   levels(data_deaths$key) <- c("ninetyfive", "fifty")
   
   
-  p2 <-   ggplot(data_country, aes(x = time)) +
-    geom_bar(data = data_country, aes(y = deaths_c, fill = "reported"),
-             fill = "coral4", stat='identity', alpha=0.5) +
-    geom_line(aes(y=estimated_deaths_c,color="Predicción"))+
-    geom_ribbon(
-      data = data_deaths_95,
-      aes(ymin = death_min, ymax = death_max, fill = key)) +
-    scale_x_date(date_breaks = "3 days", labels = date_format("%e %b")) +
-    scale_fill_manual(name = "", labels = c("95% CrI"),
-                      values = c(alpha("deepskyblue4", 0.35))) + 
-    scale_color_manual(name = "",
-                       values ="black")+
-    scale_y_continuous(labels = scales::comma_format(accuracy = 1),
-                       n.breaks = 10)+
-    xlab("") + 
-    theme(axis.text.x = element_text(angle = 45, hjust = 1),legend.position="bottom") + 
-    guides(fill=guide_legend(ncol=1))+
-    ylab("Número acumulado de muertes")
+ times <- as_date(as.character(dates[[1]]))
+    times_forecast <- times[length(times)] + 0:7
+    data_country_forecast <- data.frame("time" = times_forecast,
+                                        "country" = rep(country, 8),
+                                        "estimated_deaths_forecast" = estimated_deaths_forecast+head(tail(data_country$estimated_deaths_c, n=2), n=1),
+                                        "death_min_forecast" = estimated_deaths_li_forecast+head(tail(data_country$death_min_c, n=2), n=1),
+                                        "death_max_forecast"= estimated_deaths_ui_forecast+head(tail(data_country$death_max_c, n=2), n=1))
+    
+   
+    times_cf <- times[1] + 0:(N2-1)
+    data_country_cf <- data.frame("time" = times_cf,
+                                        "country" = rep(country, (N2)),
+                                        "estimated_deaths_cf" = estimated_deaths_cf,
+                                        "death_min_cf" = estimated_deaths_li_cf,
+                                        "death_max_cf"= estimated_deaths_ui_cf)
+    
+
   
+  data_deaths <- data_country %>%
+    select(time, deaths, estimated_deaths) %>%
+    gather("key" = key, "value" = value, -time)
   
-  plot_labels <- c("Cancelación de eventos",
+  data_deaths_forecast <- data_country_forecast %>%
+    select(time, estimated_deaths_forecast) %>%
+    gather("key" = key, "value" = value, -time)
+  
+  # Force less than 1 case to zero
+  data_deaths$value[data_deaths$value < 1] <- NA
+  data_deaths_forecast$value[data_deaths_forecast$value < 1] <- NA
+  data_deaths_all <- rbind(data_deaths, data_deaths_forecast)
+  
+  p2 <- ggplot(data_country) +
+    geom_bar(data = data_country, aes(x = time, y = deaths_c), 
+             fill = "coral4", stat='identity', alpha=0.5) + 
+    geom_line(data = data_country, aes(x = time, y = estimated_deaths_c), 
+              col = "deepskyblue4") + 
+    geom_line(data = data_country_forecast, 
+              aes(x = time, y = estimated_deaths_forecast), 
+              col = "deepskyblue4", alpha = 0.5) + 
+    geom_line(data = data_country_cf, 
+              aes(x = time, y = estimated_deaths_cf), 
+              col = "red", alpha = 0.5)+
+    geom_ribbon(data = data_country, aes(x = time, 
+                                         ymin = death_min_c, 
+                                         ymax = death_max_c),
+                fill="deepskyblue4", alpha=0.3) +
+    geom_ribbon(data = data_country_forecast, 
+                aes(x = time, 
+                    ymin = death_min_forecast, 
+                    ymax = death_max_forecast),
+                fill = "deepskyblue4", alpha=0.35) +
+    geom_ribbon(data = data_country_cf, 
+                aes(x = time, 
+                    ymin = death_min_cf, 
+                    ymax = death_max_cf),
+                fill = "red", alpha=0.35)+
+    geom_vline(xintercept = data_deaths$time[length(data_deaths$time)], 
+               col = "black", linetype = "dashed", alpha = 0.5) + 
+    #scale_fill_manual(name = "", 
+    #                 labels = c("Confirmed deaths", "Predicted deaths"),
+    #                 values = c("coral4", "deepskyblue4")) + 
+    xlab("") +
+    ylab("Número acumulado de muertos (log10)") + 
+    scale_x_date(date_breaks = "3 days", labels = date_format("%e %b")) + 
+    scale_y_continuous(trans='log10', labels=comma) + 
+    coord_cartesian(ylim = c(1, 100000), expand = FALSE) + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+    guides(fill=guide_legend(ncol=1, reverse = TRUE))
+  
+    plot_labels <- c("Cancelación de eventos",
                    "Cierre de escuelas",
                    "Aislamiento después de presentar síntomas",
                    "Distanciamiento Social")
@@ -298,12 +342,12 @@ un_dates <- unique(covariates_country_long$value)
                                                    y = x, 
                                                    group = key, 
                                                    shape = key, 
-                                                   col = key), size = 2) +
+                                                   col = key), size = 3) +
     xlab("") +
     scale_y_continuous(n.breaks = 10)+
     ylab("Número efectivo de reproducción") +
     scale_fill_manual(name = "", labels = c("95% CrI"),
-                      values = c(alpha("deepskyblue4", 0.55))) + 
+                      values = c(alpha("deepskyblue4", 0.35))) + 
     scale_shape_manual(name = "Intervenciones", labels = plot_labels,
                        values = c(21, 22, 23, 24, 25, 12)) + 
     scale_colour_discrete(name = "Intervenciones", labels = plot_labels) + 
@@ -313,20 +357,34 @@ un_dates <- unique(covariates_country_long$value)
     theme(axis.text.x = element_text(angle = 45, hjust = 1),legend.position="bottom")+
     guides(shape=guide_legend(ncol=1,nrow=4))
   
-
+  confirmados<-as.numeric(mexico %>% filter(iso3c=="MEX") %>% summarise(max=max(confirmed)))
+  muertes<-as.numeric(mexico %>% filter(iso3c=="MEX") %>% summarise(max=max(deaths)))
 ```
+# Resumen ejecutivo
 
-# Introducción
+Los [coronavirus](https://coronavirus.gob.mx/informacion-accesible/) son una familia de virus que suelen causar enfermedades en animales, aunque algunos pueden afectar también a humanos. En las personas pueden producir infecciones respiratorias que pueden ir desde un resfriado común hasta enfermedades más graves. En el 80% de los casos, la infección por este nuevo coronavirus, denominado oficialmente SARS-Cov-2, produce síntomas respiratorios de carácter leve. Con el nombre de COVID-19 se denomina la enfermedad respiratoria producida por este virus. Hasta el día de hoy (`r format(max(data_covid$date), "%b %e")`) se han confirmado en nuestro país `r formatC(confirmados, format="f", big.mark=",", digits=0)` casos y `r formatC(muertes, format="f", big.mark=",", digits=0)`muertes. Mucho se ha hablado de la importancia del distanciamiento social ya que, de no hacerlo, se traduciría en hospitales saturados y tristemente en un gran número de muertes.
 
-Este post nace despúes de 2 semanas de distanciamento social en Toronto, Canadá. Para los que no me conocen, actualmente soy doctorante en la Universidad de Toronto donde mi línea de investigación es el aprendizaje estadístico como herramienta de predicción en enfermedades que tienden a progresar a a través del tiempo (e.g. cáncer). Cuento con una posición de "Bioestadístico" en [University Health Network](https://www.uhn.ca/corporate/AboutUHN) el cual aglomera diferentes hospitales para una mejor colabaración en diferentes temas de investigación.
+Debido a la importancia de lo anterior, decidí escribir este post con los siguientes objetivos:
 
-Es importante notar que este post no ha sido revisado por pares y que mi linea de investigación no es el modelaje de epidemias como la que vivimos ahorita. Este post tiene como objetivo discutir algunos aspectos importantes de la epidemia en nuestro país y hacer unas predicciones sencillas de lo que está por venir. Es importante notar que este análisis usa datos que se han capturado hasta Marzo 28. El link para el código de este post se encuentre en un repositorio de Github el cuál podrán encontrar al final de este post; las gráficas y el análisis fueron hechos en `R`, utilizando en su mayoría librerías como `dplyr`, `ggplot2` y una serie de librerías que están aglomeradas en [**R** **E**pidemics **Con**sortium (**RECON**) suite](https://www.repidemicsconsortium.org).
+1. Resumir la situación de la epidemia por COVID-19 en nuestro país, tomando en cuenta el funcionamiento del sistema de vigilancia epidemiológico en nuestro país
+2. Estimar el impacto que han tenido las diferentes medidas de mitigación realizadas por el gobierno federal a través de las muertes observadas por COVID-19 en nuestro país mediante un modelo jerárquico bayesiano propuesto [aquí](https://www.imperial.ac.uk/mrc-global-infectious-disease-analysis/covid-19/report-13-europe-npi-impact/): Este modelo también estimó que tan rápido se infectan las personas (número efectivo de reproducción) y el total de pacientes infectados con SARS-COV2 a través del tiempo. Dado que el modelo estima el efecto que han tenido las medidas decretadas por el gobierno federal, fue posible predecir el número de muertes acumuladas que pueden ocurrir en los siguientes 7 días. 
+
+Los resultados muestran lo siguiente: el `r percent(tail(data_country[,"predicted_cases_c"],1)/pop)` (95% CrI: `r paste(percent(tail(data_country[,"predicted_min_c"],1)/pop),"-",percent(tail(data_country[,"predicted_max_c"],1)/pop))`) de la población en nuestro país se encuentra infectada con SARS-COV2 hasta `r format(max(data_covid$date), "%b %e")`. Desde que se exhortó al distanciamiento social mediante la campaña "Susana Distancia", el número de reprodución efectivo esperado fue de `r formatC(tail(data_country[,"rt"],1), format="f", big.mark=",", digits=1)` (95% CrI: `r paste(formatC(tail(data_country[,"rt_min"],1), format="f", big.mark=",", digits=1),"-",formatC(tail(data_country[,"rt_max"],1), format="f", big.mark=",", digits=1))`), lo que implica que una persona infecta a `r formatC(tail(data_country[,"rt"],1), format="f", big.mark=",", digits=1)` personas. 
+
+De acuerdo a los resultados, el número acumulado de muertes seguirá incrementando en los próximos 7 días. Si bien se observó que "Susana Distancia" ha logrado reducir el número de muertes, no se ha logrado disminuir lo suficiente el número efectivo de reproducción^[Lo ideal es que éste se encuentre debajo de uno]. Estas esimaciones son de gran utilidad ya que podrán servir para por ejemlo, realizar estimaciones del uso de recursos, especial el número de ventiladores que se necesitarán en los siguientes meses.
+
+## Introducción
+
+Este post nace despúes de 4 semanas de distanciamento social en Toronto, Canadá. Para los que no me conocen, actualmente soy doctorante en la Universidad de Toronto donde mi línea de investigación es el aprendizaje estadístico como herramienta de predicción en enfermedades que tienden a progresar a a través del tiempo (e.g. cáncer). Cuento con una posición de investigador asociado en [University Health Network](https://www.uhn.ca/corporate/AboutUHN) el cual aglomera diferentes hospitales para una mejor colabaración en diferentes temas de investigación.
+
+Es importante notar que este post no ha sido revisado por pares y que mi línea de investigación no es el modelaje de enfermedades infecciosas. Lo que sí he hecho es apoyar a un grupo de investigadores en la provincia de Ontaro en Canadá en la creación de modelo para simular la utilización de [recursos](https://www.covid-19-mc.ca/about) en hospitales por COVID-19.
+Este post tiene como objetivo discutir algunos aspectos importantes de la epidemia en nuestro país y por estimar el impacto de las diferentes medidas de mitigación en nuestro país utilizando el número de muertes como nuestra variable observable. El link para el código de este post se encuentre en un repositorio de Github el cuál podrán encontrar al final de este post; las gráficas y el análisis fueron hechos en `R`, utilizando en su mayoría librerías como `dplyr`, `ggplot2`,`rstan` entre otras.
 
 # Epidemia en México
 
 Mucho se ha hablado en las conferencias vespertinas relacionadas a COVID-19 acerca del número de casos nuevos desde que la epidemia llegó a nuestro país y si el gobierno ha hecho pruebas suficientes. Antes de describir de cualquier análisis es importante describir dos aspectos importrantes respecto a las características epidemiológicas en nuestro país:
 1. Cómo funciona el sistema epidemiológico
-2. Como se alimenta diariamente el número de casos confirmados 
+2. Cómo se alimenta diariamente el número de casos confirmados 
 
 ## Sistema epidemiológico en México
 
@@ -343,9 +401,7 @@ El 28 de febrero fue confirmado el primer paciente con COVID-19 en nuestro país
 * Caso confirmado - Persona que cumpla lo anterior y que cuente con confirmación del InDRE.
 
 Asimismo, se modificó el porcentaje de muestreo para vigilar los casos de COVID-19. Solo se realizará la prueba al 10% de los casos sospechosos sin síntomas o síntomas leves. A su vez, se realizará la prueba al 100% de los casos sospechosos con sintomología grave o que cumplan con la definición infección respiratoria aguda grave (IRAG). Es importante recalcar que el gobierno ha recalcado que **todos los casos sospechosos sin importar si se les realizó la prueba deberán de permanecer en aislamiento **.
-
 # Análisis de la epidemia en México
-
 Antes de presentar datos y gráficas me gustaría enfatizar en **2 aspectos importantes al considerar la presentación y análisis de datos de casos confirmados con COVID-19**:
 
 1. La comparación entre países (e.g. incidencia acumulada) debe de realizarse con mucho cuidado. Esto debido a lo expuesto en la sección anterior; los países tienen distintos sistemas epidemiológicos y diferentes recursos, por lo tanto la cantidad de casos confirmados está en función de la cantidad de pruebas que puedan realizar. Es muy importante recalcar esto ya que esta comparación es la que más noticias engañosas y falsas que al menos yo he encontrado en redes sociales (ver [aquí](https://twitter.com/samuel_garcias/status/1243696094682456068)).
@@ -510,23 +566,26 @@ Finalmente el modelo asume que las nuevas infecciones ocurren 30 días antes de 
 
 ## Resultados
 
-El modelo estima que para `r format(max(data_covid$date), "%b %e")`, el número acumulado de infectados por SARS-COV2 en nuestro país es de `r formatC(tail(data_country[,"predicted_cases_c"],1), format="f", big.mark=",", digits=0)` (95% CrI: `r paste(formatC(tail(data_country[,"predicted_min_c"],1), format="f", big.mark=",", digits=0),"-",formatC(tail(data_country[,"predicted_max_c"],1), format="f", big.mark=",", digits=0))`) (ver Figura XX). Lo anterior representa al `r percent(tail(data_country[,"predicted_cases_c"],1)/pop)` (95% CrI: `r paste(percent(tail(data_country[,"predicted_min_c"],1)/pop),"-",percent(tail(data_country[,"predicted_max_c"],1)/pop))`).
+El modelo estima que para `r format(max(data_covid$date), "%b %e")`, el número acumulado de infectados por SARS-COV2 en nuestro país es de `r formatC(tail(data_country[,"predicted_cases_c"],1), format="f", big.mark=",", digits=0)` (95% CrI: `r paste(formatC(tail(data_country[,"predicted_min_c"],1), format="f", big.mark=",", digits=0),"-",formatC(tail(data_country[,"predicted_max_c"],1), format="f", big.mark=",", digits=0))`) (ver Figura XX). Lo anterior representa al `r percent(tail(data_country[,"predicted_cases_c"],1)/pop)` (95% CrI: `r paste(percent(tail(data_country[,"predicted_min_c"],1)/pop),"-",percent(tail(data_country[,"predicted_max_c"],1)/pop))`) de la población total en nuestro país, utilizando los datos de CONAPO para 2020 (127 millones de mexicanos aproximadamente).
 
 Al inicio de la epidemia en México, el número efectivo de reproducción $R_t$ era de `r formatC(head(data_country[,"rt"],1), format="f", big.mark=",", digits=1)` (95% CrI: `r paste(formatC(head(data_country[,"rt_min"],1), format="f", big.mark=",", digits=1),"-",formatC(head(data_country[,"rt_max"],1), format="f", big.mark=",", digits=1))`). Después de que el gobierno implementó "Susana Distancia" el 23 de Marzo, éste descendió a `r formatC(tail(data_country[,"rt"],1), format="f", big.mark=",", digits=1)` (95% CrI: `r paste(formatC(tail(data_country[,"rt_min"],1), format="f", big.mark=",", digits=1),"-",formatC(tail(data_country[,"rt_max"],1), format="f", big.mark=",", digits=1))`)
 
 ```{r message=FALSE, warning=FALSE, tidy=TRUE,fig.width=10, fig.height=8,fig.cap="Número acumulado de confirmados por COVID-19, observados y predichos"}
-p1+labs(caption = "Juan Pablo Díaz @juandiazmart / Data: https://github.com/mariorz.",
+p1<-p1+labs(caption = "Juan Pablo Díaz @juandiazmart / Data: https://github.com/mariorz.",
         subtitle = paste("Datos hasta", format(max(data_covid$date), "%b %e, %Y"))) + 
-   theme(plot.title = element_text(size = rel(2), face = "bold"),
-         plot.subtitle = element_text(size = rel(1.5)),
-         axis.text.y = element_text(size = rel(2)),
-         axis.title.x = element_text(size = rel(1.5)),
-         axis.title.y = element_text(size = rel(1.5)),
-         axis.text.x = element_text(size = rel(2)),
-         legend.text = element_text(size = rel(1)),
-         panel.grid.major = element_line(colour = "grey90", size = .1),
+   theme(plot.title = element_text(face = "bold"),
+         panel.grid.major = element_line(colour = "white", size = .1),
          panel.background = element_blank(),
          axis.line = element_line(colour = "grey50", size = .9))
+
+
+ggplotly(p1) %>% 
+ layout(annotations = 
+ list(x = 1, y =0, text ="Juan Pablo Díaz @juandiazmart / Data: Repo John H.", 
+      showarrow = F, xref='paper', yref='paper', 
+      xanchor='right', yanchor='auto', xshift=0, yshift=0,
+      font=list(size=7))
+ )
 ```
 
 
@@ -545,22 +604,21 @@ p3+labs(caption = "Juan Pablo Díaz @juandiazmart / Data: https://github.com/mar
          axis.line = element_line(colour = "grey50", size = .9))
 ```
 
-Una de las ventajas de este modelo es que nos permite hacer predicciones del número acumulado de muertes, utilizando $R_t$ estimado en `r format(max(data_covid$date), "%b %e")` y su contrafactual^[Lo que pudo haber ocurrido] ($R_t$ al inicio de la epidemia en nuestro país);estas predicciones se muestran en la Figura XX.
+Una de las ventajas de este modelo es que nos permite hacer predicciones del número acumulado de muertes, utilizando $R_t$ estimado en `r format(max(data_covid$date), "%b %e")` y su contrafactual^[Lo que pudo haber ocurrido] ($R_t$ al inicio de la epidemia en nuestro país);estas predicciones se muestran en la Figura XX. Con estos resultados es posible estimar cuantas muertes se han evitado hasta el día de hoy, lo anterior se obtiene al calcular la diferencia entre ambas predicciones (region azul menos región roja de la Fiugra XX.). Gracias a las medidas de mitigación se han podido evitar `r formatC(head(data_country[,"rt"],1), format="f", big.mark=",", digits=1)` muertes (95% CrI: `r paste(formatC(head(data_country[,"rt_min"],1), format="f", big.mark=",", digits=1),"-",formatC(head(data_country[,"rt_max"],1), format="f", big.mark=",", digits=1))`)
 
 ```{r message=FALSE, warning=FALSE, tidy=TRUE,fig.width=10, fig.height=8,fig.cap= "Número acumulado de muertes por COVID-19, observados y predichos"}
-p2+labs(caption = "Juan Pablo Díaz @juandiazmart / Data: https://github.com/mariorz.",
+p2<-p2+labs(caption = "Juan Pablo Díaz @juandiazmart / Data: https://github.com/mariorz.",
         subtitle = paste("Datos hasta", format(max(data_covid$date), "%b %e, %Y"))) + 
-   theme(plot.title = element_text(size = rel(2), face = "bold"),
-         plot.subtitle = element_text(size = rel(1.5)),
-         axis.text.y = element_text(size = rel(2)),
-         axis.title.x = element_text(size = rel(1.5)),
-         axis.title.y = element_text(size = rel(1.5)),
-         axis.text.x = element_text(size = rel(2)),
-         legend.text = element_text(size = rel(1)),
-         panel.grid.major = element_line(colour = "grey90", size = .1),
+  theme(plot.title = element_text(face = "bold"),
+         panel.grid.major = element_line(colour = "white", size = .1),
          panel.background = element_blank(),
          axis.line = element_line(colour = "grey50", size = .9))
+
+ggplotly(p2) %>% 
+ layout(annotations = 
+ list(x = 1, y =0, text ="Juan Pablo Díaz @juandiazmart / Data: Repo John H.", 
+      showarrow = F, xref='paper', yref='paper', 
+      xanchor='right', yanchor='auto', xshift=0, yshift=0,
+      font=list(size=7))
+ )
 ```
-
-
-
