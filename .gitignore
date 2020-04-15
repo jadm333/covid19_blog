@@ -44,3 +44,8 @@ vignettes/*.pdf
 
 # files too large
 data/*
+
+_posts/*/*_cache/
+_posts/*/*_files/
+_posts/*/*.html
+*_cache/
